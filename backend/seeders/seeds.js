@@ -105,12 +105,12 @@ users.push(
 );
 
 for (let i = 1; i < NUM_SEED_USERS; i++) {
-  const firstName = faker.name.firstName();
-  const lastName = faker.name.lastName();
+  const firstName = faker.person.firstName();
+  const lastName = faker.person.lastName();
   users.push(
     new User({
-      username: faker.internet.userName(firstName, lastName),
-      email: faker.internet.email(firstName, lastName),
+      username: faker.internet.userName({ firstName, lastName }),
+      email: faker.internet.email({ firstName, lastName }),
       hashedPassword: bcrypt.hashSync(faker.internet.password(), 10)
     })
   );
@@ -147,7 +147,7 @@ const insertSeeds = () => {
 
 // Connect to the database
 mongoose
-  .connect(db, { useNewUrlParser: true })
+  .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('Connected to MongoDB successfully');
     insertSeeds();

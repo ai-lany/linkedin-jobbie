@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
-const Tweet = mongoose.model('Tweet');
+const Post = mongoose.model('Post');
 const Comment = mongoose.model('Comment');
 const { requireUser } = require('../../config/passport');
 const validateCommentInput = require('../../validations/comments');
@@ -12,15 +12,15 @@ router.post('/', requireUser, async (req, res, next) => {
         const newComment = new Comment({
             text: req.body.text,
             user: req.body.user,
-            tweet: req.body.tweet
+            post: req.body.post
         });
 
         let comment = await newComment.save();
         comment = await comment.populate('user', '_id username');
-        // await comment.populate('tweet', '_id');
+        // await comment.populate('post', '_id');
         comment = {
             ...comment.toJSON(),
-            tweet: comment.tweet._id,
+            post: comment.post._id,
         };
 
         return res.json(comment);
@@ -29,18 +29,18 @@ router.post('/', requireUser, async (req, res, next) => {
     }
 });
 
-router.get('/tweet/:tweetId', async (req, res, next) => {
-    let tweet;
+router.get('/post/:postId', async (req, res, next) => {
+    let post;
     try{
-        tweet = await Tweet.findById(req.params.tweetId);
+        post = await Post.findById(req.params.postId);
     } catch(err) {
-        const error = new Error("Tweet not found");
+        const error = new Error("Post not found");
         error.statusCode = 404;
-        error.errors = { message: "No tweet found with that id" };
+        error.errors = { message: "No post found with that id" };
         return next(error);
     }
     try{
-        const comments = await Comment.find({ tweet: tweet._id })
+        const comments = await Comment.find({ post: post._id })
         .populate("user", "_id username");
         return res.json(comments);
     }

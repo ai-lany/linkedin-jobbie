@@ -7,9 +7,9 @@ const commentSchema = new Schema({
     ref: 'User',
     required: true
   },
-  tweet: {
+  post: {
     type: Schema.Types.ObjectId,
-    ref: 'Tweet',
+    ref: 'Post',
     required: true
   },
   text: {

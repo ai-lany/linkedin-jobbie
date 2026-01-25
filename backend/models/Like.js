@@ -12,10 +12,10 @@ const likeSchema = new Schema({
         type: Schema.Types.ObjectId,
         required: true
     },
-    // Indicate the type of the liked item: 'Tweet' or 'Comment'
+    // Indicate the type of the liked item: 'Post' or 'Comment'
     likeableType: {
         type: String,
-        enum: ['tweet', 'comment'],
+        enum: ['post', 'comment'],
         required: true
     }
 }, {

@@ -2,22 +2,22 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
-const Tweet = mongoose.model('Tweet');
+const Post = mongoose.model('Post');
 const { requireUser } = require('../../config/passport');
-const validateTweetInput = require('../../validations/tweets');
+const validatePostInput = require('../../validations/posts');
 
 router.get('/', async (req, res) => {
   try {
-    const tweets = await Tweet.find()
+    const posts = await Post.find()
                               .populate("author", "_id username")
                               .sort({ createdAt: -1 });
 
-    let tweetsObject = {}
-    tweets.forEach((tweet) => {
-      tweetsObject[tweet._id] = tweet;
+    let postsObject = {}
+    posts.forEach((post) => {
+      postsObject[post._id] = post;
     })
 
-    return res.json(tweetsObject);
+    return res.json(postsObject);
   }
   catch(err) {
     return res.json([]);
@@ -35,10 +35,10 @@ router.get('/user/:userId', async (req, res, next) => {
     return next(error);
   }
   try {
-    const tweets = await Tweet.find({ author: user._id })
+    const posts = await Post.find({ author: user._id })
                               .sort({ createdAt: -1 })
                               .populate("author", "_id username");
-    return res.json(tweets);
+    return res.json(posts);
   }
   catch(err) {
     return res.json([]);
@@ -47,29 +47,29 @@ router.get('/user/:userId', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const tweet = await Tweet.findById(req.params.id)
+    const post = await Post.findById(req.params.id)
                              .populate("author", "_id username");
-    return res.json(tweet);
+    return res.json(post);
   }
   catch(err) {
-    const error = new Error('Tweet not found');
+    const error = new Error('Post not found');
     error.statusCode = 404;
-    error.errors = { message: "No tweet found with that id" };
+    error.errors = { message: "No post found with that id" };
     return next(error);
   }
 });
 
 
-router.post('/', requireUser, validateTweetInput, async (req, res, next) => {
+router.post('/', requireUser, validatePostInput, async (req, res, next) => {
     try {
-      const newTweet = new Tweet({
+      const newPost = new Post({
         text: req.body.text,
         author: req.user._id
       });
   
-      let tweet = await newTweet.save();
-      tweet = await tweet.populate('author', '_id username');
-      return res.json(tweet);
+      let post = await newPost.save();
+      post = await post.populate('author', '_id username');
+      return res.json(post);
     }
     catch(err) {
       next(err);
@@ -78,8 +78,8 @@ router.post('/', requireUser, validateTweetInput, async (req, res, next) => {
 
 router.patch('/:id', requireUser, async (req, res, next) => {
   try {
-    const tweet = await Tweet.findOneAndUpdate(
-      // Find the tweet by ID and ensure it belongs to the authenticated user
+    const post = await Post.findOneAndUpdate(
+      // Find the post by ID and ensure it belongs to the authenticated user
       {_id: req.params.id, author: req.user._id},
       {
         // Use the $set operator to update the specified fields (in this case, the 'text' field)
@@ -91,16 +91,16 @@ router.patch('/:id', requireUser, async (req, res, next) => {
       {new: true}
     ).populate('author', '_id username');
 
-    // If the tweet is not found or the user is not authorized to update it, handle the error
-    if (!tweet){
-      const error = new Error('Tweet not found or unauthorized');
+    // If the post is not found or the user is not authorized to update it, handle the error
+    if (!post){
+      const error = new Error('Post not found or unauthorized');
       error.statusCode = 404;
-      error.errors = { message: 'No tweet found with that id or unauthorized access'};
+      error.errors = { message: 'No post found with that id or unauthorized access'};
       return next(error);
     }
 
-    // If the tweet is successfully updated, return the updated tweet in the response
-    return res.json(tweet)
+    // If the post is successfully updated, return the updated post in the response
+    return res.json(post)
   } catch (err) {
     // If an error occurs during the update process, pass it to the error handling middleware
     next(err);
@@ -110,17 +110,17 @@ router.patch('/:id', requireUser, async (req, res, next) => {
 
 router.delete('/:id', requireUser, async (req, res, next) => {
   try {
-    const tweet = await Tweet.findOneAndDelete({
+    const post = await Post.findOneAndDelete({
       _id: req.params.id,
       author: req.user._id
     });
-    if (!tweet){
-      const error = new Error('Tweet not found or unauthorized')
+    if (!post){
+      const error = new Error('Post not found or unauthorized')
       error.statusCode = 404;
-      error.errors = { message: 'No tweet found with that id or unauthorized access' };
+      error.errors = { message: 'No post found with that id or unauthorized access' };
       return next(error);
     }
-    return res.json({ message: 'Tweet deleted successfully' });
+    return res.json({ message: 'Post deleted successfully' });
   } catch(err) {
     next(err);
   }

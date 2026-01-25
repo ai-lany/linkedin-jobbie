@@ -87,12 +87,14 @@ const mongoose = require("mongoose");
 const { mongoURI: db } = require('../config/keys.js');
 const User = require('../models/User');
 const Post = require('../models/Post');
+const Job = require('../models/Job');
 const bcrypt = require('bcryptjs');
 const { faker } = require('@faker-js/faker');
 
-// Create your seeds (users and posts)
+// Create your seeds (users, posts, and jobs)
 const NUM_SEED_USERS = 10;
 const NUM_SEED_POSTS = 30;
+const NUM_SEED_JOBS = 20;
 
 const users = [];
 
@@ -127,14 +129,32 @@ for (let i = 0; i < NUM_SEED_POSTS; i++) {
   );
 }
 
+const jobs = [];
+const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship'];
+
+for (let i = 0; i < NUM_SEED_JOBS; i++) {
+  jobs.push(
+    new Job({
+      company: faker.company.name(),
+      title: faker.person.jobTitle(),
+      description: faker.lorem.paragraph(),
+      location: `${faker.location.city()}, ${faker.location.state()}`,
+      jobType: jobTypes[Math.floor(Math.random() * jobTypes.length)],
+      postedBy: users[Math.floor(Math.random() * NUM_SEED_USERS)]._id
+    })
+  );
+}
+
 // Connect to the database and insert your seeds
 const insertSeeds = () => {
-  console.log("Resetting db and seeding users and posts...");
+  console.log("Resetting db and seeding users, posts, and jobs...");
 
   User.collection.drop()
     .then(() => Post.collection.drop())
+    .then(() => Job.collection.drop())
     .then(() => User.insertMany(users))
     .then(() => Post.insertMany(posts))
+    .then(() => Job.insertMany(jobs))
     .then(() => {
       console.log("Done!");
       mongoose.disconnect();

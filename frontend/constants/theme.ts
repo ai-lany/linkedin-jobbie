@@ -1,53 +1,146 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Theme constants for the job swipe app
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    // Primary colors
+    primary: '#0A66C2', // LinkedIn blue
+    primaryLight: '#E8F4FD',
+    secondary: '#00A0DC',
+
+    // Background colors
+    background: '#F3F2EE',
+    cardBackground: '#FFFFFF',
+    surface: '#FFFFFF',
+
+    // Text colors
+    text: '#191919',
+    textSecondary: '#666666',
+    textMuted: '#999999',
+    textInverse: '#FFFFFF',
+
+    // Action colors
+    success: '#057642',
+    successLight: '#E5F3ED',
+    error: '#CC1016',
+    errorLight: '#FCEAEA',
+    warning: '#F5A623',
+    warningLight: '#FEF6E5',
+
+    // Swipe indicators
+    swipeLeft: '#FF6B6B',
+    swipeRight: '#4ECDC4',
+    swipeUp: '#A855F7', // Save for later
+
+    // Border and dividers
+    border: '#E0E0E0',
+    divider: '#EBEBEB',
+
+    // Shadows
+    shadow: 'rgba(0, 0, 0, 0.1)',
+    shadowStrong: 'rgba(0, 0, 0, 0.2)',
+
+    // Overlay
+    overlay: 'rgba(0, 0, 0, 0.5)',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    // Primary colors
+    primary: '#70B5F9',
+    primaryLight: '#1D3A5C',
+    secondary: '#00A0DC',
+
+    // Background colors
+    background: '#1B1F23',
+    cardBackground: '#2D333B',
+    surface: '#22272E',
+
+    // Text colors
+    text: '#FFFFFF',
+    textSecondary: '#ADBAC7',
+    textMuted: '#768390',
+    textInverse: '#1B1F23',
+
+    // Action colors
+    success: '#3FB950',
+    successLight: '#1D3A29',
+    error: '#F85149',
+    errorLight: '#3D1A1A',
+    warning: '#D29922',
+    warningLight: '#3D2E12',
+
+    // Swipe indicators
+    swipeLeft: '#FF6B6B',
+    swipeRight: '#4ECDC4',
+    swipeUp: '#A855F7',
+
+    // Border and dividers
+    border: '#444C56',
+    divider: '#373E47',
+
+    // Shadows
+    shadow: 'rgba(0, 0, 0, 0.3)',
+    shadowStrong: 'rgba(0, 0, 0, 0.5)',
+
+    // Overlay
+    overlay: 'rgba(0, 0, 0, 0.7)',
   },
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const BorderRadius = {
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  xxl: 24,
+  full: 9999,
+};
+
+export const FontSize = {
+  xs: 10,
+  sm: 12,
+  md: 14,
+  lg: 16,
+  xl: 18,
+  xxl: 24,
+  title: 28,
+  hero: 32,
+};
+
+export const FontWeight = {
+  regular: '400' as const,
+  medium: '500' as const,
+  semibold: '600' as const,
+  bold: '700' as const,
+};
+
+export const CardDimensions = {
+  width: '92%' as const,
+  maxWidth: 380,
+  height: 520,
+  expandedHeight: '90%' as const,
+};
+
+export const SwipeConfig = {
+  velocityThreshold: 500,
+  directionalOffsetThreshold: 80,
+  swipeThreshold: 120,
+  rotationMultiplier: 0.03,
+};
+
+export default {
+  Colors,
+  Spacing,
+  BorderRadius,
+  FontSize,
+  FontWeight,
+  CardDimensions,
+  SwipeConfig,
+};

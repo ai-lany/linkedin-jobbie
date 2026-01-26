@@ -1,98 +1,249 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  Modal,
+  useColorScheme,
+} from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
+import Header from '../../components/Header';
+import SwipeableJobCard from '../../components/SwipeableJobCard';
+import ActionButtons from '../../components/ActionButtons';
+import ExpandedJobCard from '../../components/ExpandedJobCard';
+import EasyApplyModal from '../../components/EasyApplyModal';
+import { useJobs } from '../../context/JobContext';
+import { Job, SwipeDirection, EasyApplyData } from '../../types/job';
+import { Colors, Spacing, FontSize, FontWeight } from '../../constants/theme';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function DiscoverScreen() {
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
 
-export default function HomeScreen() {
+  const {
+    jobs,
+    currentIndex,
+    currentJob,
+    hasMoreJobs,
+    handleSwipe,
+    handleUndo,
+    canUndo,
+    applyToJob,
+  } = useJobs();
+
+  const [expandedJob, setExpandedJob] = useState<Job | null>(null);
+  const [applyingJob, setApplyingJob] = useState<Job | null>(null);
+
+  // Handle swipe with apply modal trigger
+  const onSwipe = useCallback(
+    (direction: SwipeDirection) => {
+      if (!currentJob) return;
+
+      const jobToApply = currentJob;
+      handleSwipe(direction);
+
+      if (direction === 'right') {
+        // User is interested - open apply modal after animation
+        setTimeout(() => {
+          setApplyingJob(jobToApply);
+        }, 400);
+      }
+    },
+    [currentJob, handleSwipe]
+  );
+
+  // Handle card tap - expand details
+  const handleCardPress = useCallback(() => {
+    if (currentJob) {
+      setExpandedJob(currentJob);
+    }
+  }, [currentJob]);
+
+  // Handle actions from expanded card
+  const handleExpandedApply = useCallback(() => {
+    const jobToApply = currentJob;
+    setExpandedJob(null);
+    setTimeout(() => {
+      if (jobToApply) {
+        setApplyingJob(jobToApply);
+      }
+    }, 300);
+  }, [currentJob]);
+
+  const handleExpandedSkip = useCallback(() => {
+    setExpandedJob(null);
+    setTimeout(() => {
+      onSwipe('left');
+    }, 300);
+  }, [onSwipe]);
+
+  const handleExpandedSave = useCallback(() => {
+    setExpandedJob(null);
+    setTimeout(() => {
+      onSwipe('up');
+    }, 300);
+  }, [onSwipe]);
+
+  // Handle button actions
+  const handleButtonSkip = useCallback(() => {
+    onSwipe('left');
+  }, [onSwipe]);
+
+  const handleButtonSave = useCallback(() => {
+    onSwipe('up');
+  }, [onSwipe]);
+
+  const handleButtonApply = useCallback(() => {
+    onSwipe('right');
+  }, [onSwipe]);
+
+  // Handle easy apply submission
+  const handleApplySubmit = useCallback(
+    (data: EasyApplyData) => {
+      if (applyingJob) {
+        applyToJob(applyingJob, data);
+      }
+      setApplyingJob(null);
+    },
+    [applyingJob, applyToJob]
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <GestureHandlerRootView style={styles.gestureRoot}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Header */}
+        <Header
+          onProfilePress={() => console.log('Profile pressed')}
+          onSettingsPress={() => console.log('Settings pressed')}
+          onFilterPress={() => console.log('Filter pressed')}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Card Stack Area */}
+        <View style={styles.cardContainer}>
+          {hasMoreJobs ? (
+            <>
+              {/* Render cards in reverse order so the current one is on top */}
+              {jobs
+                .slice(currentIndex, currentIndex + 3)
+                .reverse()
+                .map((job, reverseIndex) => {
+                  const actualIndex = 2 - reverseIndex;
+                  return (
+                    <SwipeableJobCard
+                      key={job.id}
+                      job={job}
+                      onSwipe={onSwipe}
+                      onPress={handleCardPress}
+                      isActive={actualIndex === 0}
+                      index={actualIndex}
+                    />
+                  );
+                })}
+            </>
+          ) : (
+            // No more jobs state
+            <View style={styles.emptyState}>
+              <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
+                <Ionicons name="briefcase-outline" size={48} color={colors.primary} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No more jobs</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                Check back later for new opportunities or adjust your filters
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Action Buttons */}
+        {hasMoreJobs && (
+          <View style={[styles.actionsContainer, { backgroundColor: colors.background }]}>
+            <ActionButtons
+              onSkip={handleButtonSkip}
+              onSave={handleButtonSave}
+              onApply={handleButtonApply}
+              onUndo={handleUndo}
+              canUndo={canUndo}
+            />
+          </View>
+        )}
+
+        {/* Expanded Job Modal */}
+        <Modal
+          visible={expandedJob !== null}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setExpandedJob(null)}
+        >
+          {expandedJob && (
+            <ExpandedJobCard
+              job={expandedJob}
+              onClose={() => setExpandedJob(null)}
+              onApply={handleExpandedApply}
+              onSkip={handleExpandedSkip}
+              onSave={handleExpandedSave}
+            />
+          )}
+        </Modal>
+
+        {/* Easy Apply Modal */}
+        <Modal
+          visible={applyingJob !== null}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setApplyingJob(null)}
+        >
+          {applyingJob && (
+            <EasyApplyModal
+              job={applyingJob}
+              onClose={() => setApplyingJob(null)}
+              onSubmit={handleApplySubmit}
+            />
+          )}
+        </Modal>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  gestureRoot: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+  cardContainer: {
+    flex: 1,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  actionsContainer: {
+    paddingBottom: Spacing.md,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  emptyState: {
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  emptyIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+  },
+  emptyTitle: {
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.bold,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: FontSize.md,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });

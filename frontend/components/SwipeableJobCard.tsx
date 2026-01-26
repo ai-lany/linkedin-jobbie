@@ -96,34 +96,41 @@ export default function SwipeableJobCard({
 
   // Like indicator (right swipe)
   const likeOpacity = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      translateX.value,
-      [0, SWIPE_THRESHOLD / 2, SWIPE_THRESHOLD],
-      [0, 0.5, 1],
-      Extrapolation.CLAMP
-    );
+
+    const opacity = translateX.value > 0
+      ? interpolate(
+          translateX.value,
+          [0, SWIPE_THRESHOLD / 2, SWIPE_THRESHOLD],
+          [0, 0.5, 1],
+          Extrapolation.CLAMP
+        )
+      : 0;
     return { opacity };
   });
 
   // Nope indicator (left swipe)
   const nopeOpacity = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      translateX.value,
-      [0, -SWIPE_THRESHOLD / 2, -SWIPE_THRESHOLD],
-      [0, 0.5, 1],
-      Extrapolation.CLAMP
-    );
+    const opacity = translateX.value < 0
+      ? interpolate(
+          -translateX.value,
+          [0, SWIPE_THRESHOLD / 2, SWIPE_THRESHOLD],
+          [0, 0.5, 1],
+          Extrapolation.CLAMP
+        )
+      : 0;
     return { opacity };
   });
 
   // Save indicator (up swipe)
   const saveOpacity = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      translateY.value,
-      [0, -SWIPE_THRESHOLD / 2, -SWIPE_THRESHOLD],
-      [0, 0.5, 1],
-      Extrapolation.CLAMP
-    );
+     const opacity = translateY.value < 0
+      ? interpolate(
+          -translateY.value,
+          [0, SWIPE_THRESHOLD / 2, SWIPE_THRESHOLD],
+          [0, 0.5, 1],
+          Extrapolation.CLAMP
+        )
+      : 0;
     return { opacity };
   });
 
@@ -179,12 +186,12 @@ const styles = StyleSheet.create({
   likeIndicator: {
     top: 40,
     left: 20,
-    transform: [{ rotate: '-20deg' }],
+    transform: [{ rotate: '20deg' }],
   },
   nopeIndicator: {
     top: 40,
     right: 20,
-    transform: [{ rotate: '20deg' }],
+    transform: [{ rotate: '-20deg' }],
   },
   saveIndicator: {
     bottom: 100,

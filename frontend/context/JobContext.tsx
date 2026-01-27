@@ -46,32 +46,72 @@ const JobContext = createContext<JobContextType | undefined>(undefined);
 
 // Transform backend job data to frontend Job type
 function transformBackendJob(id: string, backendJob: any): Job {
+  // Handle company - it could be a populated object or just an ID
+  const companyName = typeof backendJob.company === 'object' && backendJob.company !== null
+    ? (backendJob.company.name || 'Unknown Company')
+    : (typeof backendJob.company === 'string' ? backendJob.company : 'Unknown Company');
+
+  const companyId = typeof backendJob.company === 'object' && backendJob.company !== null
+    ? String(backendJob.company._id || '')
+    : String(backendJob.company || '');
+
+  // Generate logo URL from company name - return empty string if unknown
+  const logoUrl = companyName !== 'Unknown Company'
+    ? `https://logo.clearbit.com/${companyName.toLowerCase().replace(/\s+/g, '')}.com`
+    : '';
+
+  // Ensure all company fields are strings
+  const companyIndustry = typeof backendJob.company === 'object' && backendJob.company?.industry
+    ? String(backendJob.company.industry)
+    : 'Technology';
+
+  const companySize = typeof backendJob.company === 'object' && backendJob.company?.size
+    ? String(backendJob.company.size)
+    : 'Unknown';
+
+  const companyLocation = typeof backendJob.company === 'object' && backendJob.company?.location
+    ? String(backendJob.company.location)
+    : (backendJob.location ? String(backendJob.location) : 'Remote');
+
+  // Ensure arrays contain only strings
+  const highlights = Array.isArray(backendJob.highlights)
+    ? backendJob.highlights.filter((h: any) => typeof h === 'string' && h.length > 0).slice(0, 5)
+    : [];
+
+  const skills = Array.isArray(backendJob.skills)
+    ? backendJob.skills.filter((s: any) => typeof s === 'string' && s.length > 0).slice(0, 10)
+    : [];
+
+  // Safely get poster username
+  const posterUsername = backendJob.postedBy?.username
+    ? String(backendJob.postedBy.username)
+    : 'Unknown';
+
   return {
-    id,
-    title: backendJob.title,
+    id: String(id),
+    title: String(backendJob.title || 'Untitled Position'),
     company: {
-      id: backendJob.company._id,
-      name: backendJob.company.name,
-      logo: `https://logo.clearbit.com/${backendJob.company.name.toLowerCase().replace(/\s+/g, '')}.com`,
-      industry: 'Technology',
-      size: 'Unknown',
-      location: backendJob.location,
+      id: companyId,
+      name: String(companyName),
+      logo: logoUrl,
+      industry: companyIndustry,
+      location: companyLocation,
     },
-    location: backendJob.location,
+    location: String(backendJob.location || 'Remote'),
     locationType: 'hybrid',
     salary: undefined,
-    postedAt: backendJob.createdAt || new Date().toISOString(),
+    postedAt: String(backendJob.createdAt || new Date().toISOString()),
     applicants: 0,
     easyApply: true,
-    highlights: ['View job details'],
-    skills: [],
+    highlights: highlights.length > 0 ? highlights : ['View job details'],
+    skills: skills,
     experienceLevel: 'mid-senior',
-    employmentType: (backendJob.jobType?.toLowerCase().replace('-', '') as any) || 'full-time',
-    description: backendJob.description,
+    employmentType: (backendJob.jobType?.toLowerCase().replace('_', '-') as any) || 'full-time',
+    description: String(backendJob.description || ''),
     responsibilities: [],
     qualifications: [],
     benefits: [],
-    aboutCompany: `Posted by ${backendJob.postedBy?.username || 'Unknown'}`,
+    aboutCompany: `Posted by ${posterUsername}`,
   };
 }
 
@@ -160,8 +200,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
         setError(null);
 
         // Adjust the URL based on your backend server address
-        const response = await fetch(`${apiBaseUrl}/api/jobs`);
-
+        const response = await fetch(`${apiBaseUrl}/jobs`);
         if (!response.ok) {
           throw new Error(`Failed to fetch jobs: ${response.statusText}`);
         }
@@ -169,10 +208,24 @@ export function JobProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
 
         // Transform backend data to frontend Job type
-        const transformedJobs: Job[] = Object.entries(data).map(([id, backendJob]: [string, any]) =>
-          transformBackendJob(id, backendJob)
-        );
+        const transformedJobs: Job[] = Object.entries(data)
+          .map(([id, backendJob]: [string, any]) => {
+            try {
+              const job = transformBackendJob(id, backendJob);
+              // Validate all string fields before returning
+              if (!job.title || !job.company.name || !job.location) {
+                console.warn('Skipping job with missing required fields:', id);
+                return null;
+              }
+              return job;
+            } catch (err) {
+              console.error('Error transforming job:', id, err);
+              return null;
+            }
+          })
+          .filter((job): job is Job => job !== null);
 
+        console.log('Successfully loaded jobs:', transformedJobs.length);
         setJobs(transformedJobs);
       } catch (err) {
         console.error('Error fetching jobs:', err);

@@ -91,12 +91,12 @@ export default function ExpandedJobCard({
         <View style={[styles.companyCard, { backgroundColor: colors.cardBackground }]}>
           <View style={styles.companyHeader}>
             <View style={[styles.logoContainer, { backgroundColor: colors.background }]}>
-              {job.company.logo ? (
+              {job.company.logo && job.company.logo.length > 0 ? (
                 <Image source={{ uri: job.company.logo }} style={styles.logo} />
               ) : (
                 <View style={[styles.logoPlaceholder, { backgroundColor: colors.primary }]}>
                   <Text style={[styles.logoText, { color: colors.textInverse }]}>
-                    {job.company.name.charAt(0)}
+                    {job.company.name.charAt(0).toUpperCase()}
                   </Text>
                 </View>
               )}

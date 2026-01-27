@@ -5,7 +5,6 @@ export interface Company {
   name: string;
   logo: string;
   industry: string;
-  size: string; // e.g., "1,001-5,000 employees"
   location: string;
 }
 

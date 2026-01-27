@@ -25,6 +25,12 @@ export default function JobCard({ job, onPress }: JobCardProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
+  // Validate job data
+  if (!job || typeof job.company?.name !== 'string' || typeof job.title !== 'string') {
+    console.error('Invalid job data in JobCard:', job);
+    return null;
+  }
+
   // Double tap gesture to expand card
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
@@ -79,22 +85,22 @@ export default function JobCard({ job, onPress }: JobCardProps) {
       {/* Company Header */}
       <View style={styles.header}>
         <View style={[styles.logoContainer, { backgroundColor: colors.background }]}>
-          {job.company.logo ? (
+          {job.company.logo && job.company.logo.length > 0 ? (
             <Image source={{ uri: job.company.logo }} style={styles.logo} />
           ) : (
             <View style={[styles.logoPlaceholder, { backgroundColor: colors.primary }]}>
               <Text style={[styles.logoText, { color: colors.textInverse }]}>
-                {job.company.name.charAt(0)}
+                {job.company.name.charAt(0).toUpperCase()}
               </Text>
             </View>
           )}
         </View>
         <View style={styles.companyInfo}>
           <Text style={[styles.companyName, { color: colors.text }]} numberOfLines={1}>
-            {job.company.name}
+            {String(job.company.name)}
           </Text>
           <Text style={[styles.companyMeta, { color: colors.textSecondary }]} numberOfLines={1}>
-            {job.company.industry} · {job.company.size}
+            {`${String(job.company.industry)} · ${String(job.company.size)}`}
           </Text>
         </View>
         {job.easyApply && (
@@ -107,7 +113,7 @@ export default function JobCard({ job, onPress }: JobCardProps) {
 
       {/* Job Title */}
       <Text style={[styles.jobTitle, { color: colors.text }]} numberOfLines={2}>
-        {job.title}
+        {String(job.title)}
       </Text>
 
       {/* Location & Type */}
@@ -115,12 +121,12 @@ export default function JobCard({ job, onPress }: JobCardProps) {
         <View style={styles.locationItem}>
           <Ionicons name={getLocationIcon(job.locationType)} size={16} color={colors.textSecondary} />
           <Text style={[styles.locationText, { color: colors.textSecondary }]}>
-            {job.location}
+            {String(job.location)}
           </Text>
         </View>
         <View style={[styles.typeBadge, { backgroundColor: colors.background }]}>
           <Text style={[styles.typeText, { color: colors.textSecondary }]}>
-            {job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1)}
+            {String(job.locationType).charAt(0).toUpperCase() + String(job.locationType).slice(1)}
           </Text>
         </View>
       </View>
@@ -136,32 +142,36 @@ export default function JobCard({ job, onPress }: JobCardProps) {
       )}
 
       {/* Highlights */}
-      <View style={styles.highlightsSection}>
-        {job.highlights.slice(0, 3).map((highlight, index) => (
-          <View key={index} style={styles.highlightRow}>
-            <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-            <Text style={[styles.highlightText, { color: colors.text }]} numberOfLines={1}>
-              {highlight}
-            </Text>
-          </View>
-        ))}
-      </View>
+      {Array.isArray(job.highlights) && job.highlights.length > 0 && (
+        <View style={styles.highlightsSection}>
+          {job.highlights.slice(0, 3).map((highlight, index) => (
+            <View key={`highlight-${index}`} style={styles.highlightRow}>
+              <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+              <Text style={[styles.highlightText, { color: colors.text }]} numberOfLines={1}>
+                {String(highlight)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Skills Tags */}
-      <View style={styles.skillsContainer}>
-        {job.skills.slice(0, 4).map((skill, index) => (
-          <View key={index} style={[styles.skillTag, { backgroundColor: colors.background }]}>
-            <Text style={[styles.skillText, { color: colors.textSecondary }]}>{skill}</Text>
-          </View>
-        ))}
-        {job.skills.length > 4 && (
-          <View style={[styles.skillTag, { backgroundColor: colors.primaryLight }]}>
-            <Text style={[styles.skillText, { color: colors.primary }]}>
-              +{job.skills.length - 4} more
-            </Text>
-          </View>
-        )}
-      </View>
+      {Array.isArray(job.skills) && job.skills.length > 0 && (
+        <View style={styles.skillsContainer}>
+          {job.skills.slice(0, 4).map((skill, index) => (
+            <View key={`skill-${index}`} style={[styles.skillTag, { backgroundColor: colors.background }]}>
+              <Text style={[styles.skillText, { color: colors.textSecondary }]}>{String(skill)}</Text>
+            </View>
+          ))}
+          {job.skills.length > 4 && (
+            <View style={[styles.skillTag, { backgroundColor: colors.primaryLight }]}>
+              <Text style={[styles.skillText, { color: colors.primary }]}>
+                {`+${job.skills.length - 4} more`}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Footer Meta */}
       <View style={[styles.footer, { borderTopColor: colors.divider }]}>
@@ -180,7 +190,7 @@ export default function JobCard({ job, onPress }: JobCardProps) {
         <View style={styles.metaItem}>
           <Ionicons name="people-outline" size={14} color={colors.textMuted} />
           <Text style={[styles.metaText, { color: colors.textMuted }]}>
-            {job.applicants} applicants
+            {Number(job.applicants) || 0} applicants
           </Text>
         </View>
       </View>

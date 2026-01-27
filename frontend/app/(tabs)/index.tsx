@@ -162,7 +162,6 @@ export default function DiscoverScreen() {
                 })}
             </>
           ) : (
-            // No more jobs state
             <View style={styles.emptyState}>
               <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
                 <Ionicons name="briefcase-outline" size={48} color={colors.primary} />
@@ -174,7 +173,6 @@ export default function DiscoverScreen() {
             </View>
           )}
         </View>
-
         {/* Action Buttons */}
         {hasMoreJobs && (
           <View style={[styles.actionsContainer, { backgroundColor: colors.background }]}>

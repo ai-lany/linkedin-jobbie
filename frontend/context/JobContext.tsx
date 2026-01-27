@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { Job, SwipeDirection, EasyApplyData } from '../types/job';
-import { mockJobs } from '../data/mockJobs';
 
 interface SavedJob {
   job: Job;
@@ -17,6 +17,8 @@ interface JobContextType {
   // Jobs to swipe
   jobs: Job[];
   currentIndex: number;
+  isLoading: boolean;
+  error: string | null;
 
   // Saved jobs
   savedJobs: SavedJob[];
@@ -42,8 +44,41 @@ interface JobContextType {
 
 const JobContext = createContext<JobContextType | undefined>(undefined);
 
+// Transform backend job data to frontend Job type
+function transformBackendJob(id: string, backendJob: any): Job {
+  return {
+    id,
+    title: backendJob.title,
+    company: {
+      id: backendJob.company,
+      name: backendJob.company,
+      logo: `https://logo.clearbit.com/${backendJob.company.toLowerCase().replace(/\s+/g, '')}.com`,
+      industry: 'Technology',
+      size: 'Unknown',
+      location: backendJob.location,
+    },
+    location: backendJob.location,
+    locationType: 'hybrid',
+    salary: undefined,
+    postedAt: backendJob.createdAt || new Date().toISOString(),
+    applicants: 0,
+    easyApply: true,
+    highlights: ['View job details'],
+    skills: [],
+    experienceLevel: 'mid-senior',
+    employmentType: (backendJob.jobType?.toLowerCase().replace('-', '') as any) || 'full-time',
+    description: backendJob.description,
+    responsibilities: [],
+    qualifications: [],
+    benefits: [],
+    aboutCompany: `Posted by ${backendJob.postedBy?.username || 'Unknown'}`,
+  };
+}
+
 export function JobProvider({ children }: { children: ReactNode }) {
-  const [jobs] = useState<Job[]>(mockJobs);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
   const [appliedJobs, setAppliedJobs] = useState<AppliedJob[]>([]);
@@ -113,11 +148,50 @@ export function JobProvider({ children }: { children: ReactNode }) {
     }
   }, [swipeHistory, unsaveJob]);
 
+  // Prefer explicit env var; fall back to sensible platform defaults
+  const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5001/api';
+  const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL ?? defaultBaseUrl;
+
+  // Fetch jobs from backend API
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Adjust the URL based on your backend server address
+        const response = await fetch(`${apiBaseUrl}/api/jobs`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch jobs: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Transform backend data to frontend Job type
+        const transformedJobs: Job[] = Object.entries(data).map(([id, backendJob]: [string, any]) =>
+          transformBackendJob(id, backendJob)
+        );
+        
+        setJobs(transformedJobs);
+      } catch (err) {
+        console.error('Error fetching jobs:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
   return (
     <JobContext.Provider
       value={{
         jobs,
         currentIndex,
+        isLoading,
+        error,
         savedJobs,
         saveJob,
         unsaveJob,

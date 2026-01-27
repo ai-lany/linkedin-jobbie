@@ -31,6 +31,8 @@ export default function DiscoverScreen() {
     handleUndo,
     canUndo,
     applyToJob,
+    isLoading,
+    error,
   } = useJobs();
 
   const [expandedJob, setExpandedJob] = useState<Job | null>(null);
@@ -122,7 +124,24 @@ export default function DiscoverScreen() {
 
         {/* Card Stack Area */}
         <View style={styles.cardContainer}>
-          {hasMoreJobs ? (
+          {isLoading ? (
+            <View style={styles.emptyState}>
+              <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
+                <Ionicons name="hourglass-outline" size={48} color={colors.primary} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>Loading jobs...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.emptyState}>
+              <View style={[styles.emptyIcon, { backgroundColor: colors.errorLight }]}>
+                <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>Error loading jobs</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                {error}
+              </Text>
+            </View>
+          ) : hasMoreJobs ? (
             <>
               {/* Render cards in reverse order so the current one is on top */}
               {jobs
@@ -154,9 +173,7 @@ export default function DiscoverScreen() {
               </Text>
             </View>
           )}
-        </View>
-
-        {/* Action Buttons */}
+        </View>        {/* Action Buttons */}
         {hasMoreJobs && (
           <View style={[styles.actionsContainer, { backgroundColor: colors.background }]}>
             <ActionButtons

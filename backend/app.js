@@ -21,18 +21,15 @@ const jobsRouter = require('./routes/api/jobs');
 const companiesRouter = require('./routes/api/companies');
 const jobApplicationsRouter = require('./routes/api/jobApplications');
 const resumesRouter = require('./routes/api/resumes');
-const csrfRouter = require('./routes/api/csrf');
 
 const app = express();
 
 app.use(logger('dev')); // log request components (URL/method) to terminal
 app.use(express.json()); // parse JSON request body
 app.use(express.urlencoded({ extended: false })); // parse urlencoded request body
-app.use(cookieParser()); // parse cookies as an object on req.cookies
 
 app.use(passport.initialize());
 const cors = require('cors');
-const csurf = require('csurf');
 const { isProduction } = require('./config/keys');
 
 // Security Middleware
@@ -43,27 +40,8 @@ if (!isProduction) {
     app.use(cors());
 }
 
-// Set the _csrf token and create req.csrfToken method to generate a hashed
-// CSRF token
-// Exclude auth routes from CSRF for mobile app compatibility
-const csrfProtection = csurf({
-  cookie: {
-    secure: isProduction,
-    sameSite: isProduction && "Lax",
-    httpOnly: true
-  }
-});
-
-// Apply CSRF protection selectively (excluding auth endpoints for mobile)
-const conditionalCSRF = (req, res, next) => {
-  // Skip CSRF for login and register endpoints
-  if (req.path === '/api/users/login' || req.path === '/api/users/register') {
-    return next();
-  }
-  return csrfProtection(req, res, next);
-};
-
-app.use(conditionalCSRF);
+// Note: CSRF protection removed - not needed for mobile app using JWT authentication
+// Mobile apps send JWT tokens in Authorization headers, which aren't vulnerable to CSRF attacks
 
 // Attach Express routers
 app.use('/api/users', usersRouter); // update the path
@@ -74,7 +52,6 @@ app.use('/api/jobs', jobsRouter);
 app.use('/api/companies', companiesRouter);
 app.use('/api/applications', jobApplicationsRouter);
 app.use('/api/resumes', resumesRouter);
-app.use('/api/csrf', csrfRouter);
 
 // Serve uploaded files statically
 app.use('/uploads', express.static('uploads'));

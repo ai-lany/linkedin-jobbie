@@ -8,6 +8,7 @@ require('./models/Post');
 require('./models/Comment');
 require('./models/Like');
 require('./models/Job');
+require('./models/Company');
 require('./config/passport');
 const passport = require('passport');
 
@@ -16,6 +17,7 @@ const postsRouter = require('./routes/api/posts');
 const commentsRouter = require('./routes/api/comments');
 const likesRouter = require('./routes/api/likes');
 const jobsRouter = require('./routes/api/jobs');
+const companiesRouter = require('./routes/api/companies');
 const csrfRouter = require('./routes/api/csrf');
 
 const app = express();
@@ -56,6 +58,7 @@ app.use('/api/posts', postsRouter);
 app.use('/api/comments', commentsRouter);
 app.use('/api/likes', likesRouter);
 app.use('/api/jobs', jobsRouter);
+app.use('/api/companies', companiesRouter);
 app.use('/api/csrf', csrfRouter);
 
 // Express custom middleware for catching all unmatched requests and formatting

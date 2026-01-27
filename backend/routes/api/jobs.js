@@ -11,6 +11,7 @@ router.get('/', async (req, res) => {
   try {
     const jobs = await Job.find()
                           .populate("postedBy", "_id username")
+                          .populate("company", "name location industry")
                           .sort({ createdAt: -1 });
 
     let jobsObject = {}
@@ -29,7 +30,8 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const job = await Job.findById(req.params.id)
-                         .populate("postedBy", "_id username");
+                         .populate("postedBy", "_id username")
+                         .populate("company", "name location industry website size description");
     return res.json(job);
   }
   catch(err) {
@@ -54,6 +56,7 @@ router.post('/', requireUser, validateJobInput, async (req, res, next) => {
     });
 
     let job = await newJob.save();
+    job = await job.populate('company', 'name location industry');
     job = await job.populate('postedBy', '_id username');
     return res.json(job);
   }

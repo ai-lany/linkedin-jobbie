@@ -5,14 +5,16 @@ const { mongoURI: db } = require('../config/keys.js');
 const User = require('../models/User');
 const Post = require('../models/Post');
 const Job = require('../models/Job');
+const Company = require('../models/Company');
 const Comment = require('../models/Comment');
 const Like = require('../models/Like');
 const bcrypt = require('bcryptjs');
 const { faker } = require('@faker-js/faker');
 
-// Create your seeds (users, posts, jobs, comments, and likes)
+// Create your seeds (users, posts, jobs, companies, comments, and likes)
 const NUM_SEED_USERS = 10;
 const NUM_SEED_POSTS = 30;
+const NUM_SEED_COMPANIES = 15;
 const NUM_SEED_JOBS = 20;
 const NUM_SEED_COMMENTS = 50;
 const NUM_SEED_LIKES = 80;
@@ -23,7 +25,8 @@ users.push(
   new User({
     username: 'demo-user',
     email: 'demo-user@appacademy.io',
-    hashedPassword: bcrypt.hashSync('starwars', 10)
+    hashedPassword: bcrypt.hashSync('starwars', 10),
+    phoneNumber: faker.phone.number()
   })
 );
 
@@ -34,10 +37,50 @@ for (let i = 1; i < NUM_SEED_USERS; i++) {
     new User({
       username: faker.internet.userName({ firstName, lastName }),
       email: faker.internet.email({ firstName, lastName }),
-      hashedPassword: bcrypt.hashSync(faker.internet.password(), 10)
+      hashedPassword: bcrypt.hashSync(faker.internet.password(), 10),
+      phoneNumber: faker.phone.number()
     })
   );
 }
+
+// Create companies first
+const companies = [];
+const industries = ['Technology', 'Healthcare', 'Finance', 'Education', 'Retail', 'Manufacturing', 'Consulting'];
+const companySizes = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5000+'];
+
+for (let i = 0; i < NUM_SEED_COMPANIES; i++) {
+  companies.push(
+    new Company({
+      name: faker.company.name(),
+      description: faker.company.catchPhrase() + '. ' + faker.lorem.paragraph(),
+      industry: industries[Math.floor(Math.random() * industries.length)],
+      location: `${faker.location.city()}, ${faker.location.state()}`,
+      website: faker.internet.url(),
+      size: companySizes[Math.floor(Math.random() * companySizes.length)]
+    })
+  );
+}
+
+// Add work history to users
+users.forEach(user => {
+  const numJobs = Math.floor(Math.random() * 4); // 0-3 previous jobs
+  const workHistory = [];
+  
+  for (let i = 0; i < numJobs; i++) {
+    const startDate = faker.date.past({ years: 5 });
+    const isCurrent = i === 0 && Math.random() > 0.5;
+    
+    workHistory.push({
+      company: companies[Math.floor(Math.random() * NUM_SEED_COMPANIES)]._id,
+      title: faker.person.jobTitle(),
+      startDate: startDate,
+      endDate: isCurrent ? null : faker.date.between({ from: startDate, to: new Date() }),
+      current: isCurrent
+    });
+  }
+  
+  user.workHistory = workHistory;
+});
 
 const posts = [];
 
@@ -74,7 +117,7 @@ for (let i = 0; i < NUM_SEED_JOBS; i++) {
   
   jobs.push(
     new Job({
-      company: faker.company.name(),
+      company: companies[Math.floor(Math.random() * NUM_SEED_COMPANIES)]._id,
       title: faker.person.jobTitle(),
       description: faker.lorem.paragraph(),
       location: `${faker.location.city()}, ${faker.location.state()}`,
@@ -118,13 +161,15 @@ for (let i = 0; i < NUM_SEED_LIKES; i++) {
 
 // Connect to the database and insert your seeds
 const insertSeeds = () => {
-  console.log("Resetting db and seeding users, posts, jobs, comments, and likes...");
+  console.log("Resetting db and seeding users, companies, posts, jobs, comments, and likes...");
 
   User.collection.drop()
+    .then(() => Company.collection.drop())
     .then(() => Post.collection.drop())
     .then(() => Job.collection.drop())
     .then(() => Comment.collection.drop())
     .then(() => Like.collection.drop())
+    .then(() => Company.insertMany(companies))
     .then(() => User.insertMany(users))
     .then(() => Post.insertMany(posts))
     .then(() => Job.insertMany(jobs))

@@ -50,9 +50,9 @@ function transformBackendJob(id: string, backendJob: any): Job {
     id,
     title: backendJob.title,
     company: {
-      id: backendJob.company,
-      name: backendJob.company,
-      logo: `https://logo.clearbit.com/${backendJob.company.toLowerCase().replace(/\s+/g, '')}.com`,
+      id: backendJob.company._id,
+      name: backendJob.company.name,
+      logo: `https://logo.clearbit.com/${backendJob.company.name.toLowerCase().replace(/\s+/g, '')}.com`,
       industry: 'Technology',
       size: 'Unknown',
       location: backendJob.location,
@@ -158,21 +158,21 @@ export function JobProvider({ children }: { children: ReactNode }) {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Adjust the URL based on your backend server address
         const response = await fetch(`${apiBaseUrl}/api/jobs`);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch jobs: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
-        
+
         // Transform backend data to frontend Job type
         const transformedJobs: Job[] = Object.entries(data).map(([id, backendJob]: [string, any]) =>
           transformBackendJob(id, backendJob)
         );
-        
+
         setJobs(transformedJobs);
       } catch (err) {
         console.error('Error fetching jobs:', err);

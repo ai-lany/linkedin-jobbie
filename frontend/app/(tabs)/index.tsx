@@ -173,7 +173,9 @@ export default function DiscoverScreen() {
               </Text>
             </View>
           )}
-        </View>        {/* Action Buttons */}
+        </View>
+
+        {/* Action Buttons */}
         {hasMoreJobs && (
           <View style={[styles.actionsContainer, { backgroundColor: colors.background }]}>
             <ActionButtons

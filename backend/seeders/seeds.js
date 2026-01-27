@@ -131,8 +131,26 @@ for (let i = 0; i < NUM_SEED_POSTS; i++) {
 
 const jobs = [];
 const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship'];
+const sampleQuestions = [
+  "Why do you want to work for our company?",
+  "What are your salary expectations?",
+  "Describe a challenging project you've worked on.",
+  "What are your greatest strengths?",
+  "Where do you see yourself in 5 years?",
+  "Tell us about a time you worked in a team.",
+  "How do you handle tight deadlines?",
+  "What motivates you in your work?"
+];
 
 for (let i = 0; i < NUM_SEED_JOBS; i++) {
+  // Randomly select 0-5 questions
+  const numQuestions = Math.floor(Math.random() * 6); // 0 to 5
+  const jobQuestions = [];
+  const shuffled = [...sampleQuestions].sort(() => 0.5 - Math.random());
+  for (let j = 0; j < numQuestions; j++) {
+    jobQuestions.push(shuffled[j]);
+  }
+  
   jobs.push(
     new Job({
       company: faker.company.name(),
@@ -140,6 +158,7 @@ for (let i = 0; i < NUM_SEED_JOBS; i++) {
       description: faker.lorem.paragraph(),
       location: `${faker.location.city()}, ${faker.location.state()}`,
       jobType: jobTypes[Math.floor(Math.random() * jobTypes.length)],
+      questions: jobQuestions,
       postedBy: users[Math.floor(Math.random() * NUM_SEED_USERS)]._id
     })
   );
@@ -167,7 +186,7 @@ const insertSeeds = () => {
 
 // Connect to the database
 mongoose
-  .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(db)
   .then(() => {
     console.log('Connected to MongoDB successfully');
     insertSeeds();

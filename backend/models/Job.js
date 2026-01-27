@@ -23,6 +23,16 @@ const jobSchema = new Schema({
     enum: ['Full-time', 'Part-time', 'Contract', 'Internship'],
     default: 'Full-time'
   },
+  questions: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: function(v) {
+        return v.length <= 5;
+      },
+      message: 'A job can have a maximum of 5 questions'
+    }
+  },
   postedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User'

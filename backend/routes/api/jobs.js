@@ -49,6 +49,7 @@ router.post('/', requireUser, validateJobInput, async (req, res, next) => {
       description: req.body.description,
       location: req.body.location,
       jobType: req.body.jobType,
+      questions: req.body.questions || [],
       postedBy: req.user._id
     });
 
@@ -72,7 +73,8 @@ router.patch('/:id', requireUser, async (req, res, next) => {
           title: req.body.title,
           description: req.body.description,
           location: req.body.location,
-          jobType: req.body.jobType
+          jobType: req.body.jobType,
+          questions: req.body.questions
         }
       },
       {new: true}

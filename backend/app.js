@@ -45,15 +45,25 @@ if (!isProduction) {
 
 // Set the _csrf token and create req.csrfToken method to generate a hashed
 // CSRF token
-app.use(
-    csurf({
-      cookie: {
-        secure: isProduction,
-        sameSite: isProduction && "Lax",
-        httpOnly: true
-      }
-    })
-);
+// Exclude auth routes from CSRF for mobile app compatibility
+const csrfProtection = csurf({
+  cookie: {
+    secure: isProduction,
+    sameSite: isProduction && "Lax",
+    httpOnly: true
+  }
+});
+
+// Apply CSRF protection selectively (excluding auth endpoints for mobile)
+const conditionalCSRF = (req, res, next) => {
+  // Skip CSRF for login and register endpoints
+  if (req.path === '/api/users/login' || req.path === '/api/users/register') {
+    return next();
+  }
+  return csrfProtection(req, res, next);
+};
+
+app.use(conditionalCSRF);
 
 // Attach Express routers
 app.use('/api/users', usersRouter); // update the path

@@ -5,19 +5,22 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Image,
   ScrollView,
   useColorScheme,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useJobs } from '../../context/JobContext';
+import { useAuth } from '../../context/AuthContext';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../../constants/theme';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-
+  const router = useRouter();
   const { savedJobs, appliedJobs } = useJobs();
+  const { currentUser, logout } = useAuth();
 
   const menuItems = [
     { icon: 'document-text-outline', label: 'My Resumes', count: 2 },
@@ -26,6 +29,27 @@ export default function ProfileScreen() {
     { icon: 'shield-checkmark-outline', label: 'Privacy', count: null },
     { icon: 'help-circle-outline', label: 'Help & Support', count: null },
   ];
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            router.replace('/(auth)/login');
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -37,12 +61,14 @@ export default function ProfileScreen() {
               <Ionicons name="person" size={40} color={colors.textInverse} />
             </View>
             <View style={styles.profileInfo}>
-              <Text style={[styles.name, { color: colors.text }]}>John Doe</Text>
+              <Text style={[styles.name, { color: colors.text }]}>
+                {currentUser?.username || 'John Doe'}
+              </Text>
               <Text style={[styles.headline, { color: colors.textSecondary }]}>
                 Software Engineer
               </Text>
               <Text style={[styles.location, { color: colors.textMuted }]}>
-                San Francisco, CA
+                {currentUser?.email || 'user@example.com'}
               </Text>
             </View>
             <TouchableOpacity style={[styles.editButton, { borderColor: colors.primary }]}>
@@ -71,12 +97,12 @@ export default function ProfileScreen() {
 
         {/* Menu Items */}
         <View style={[styles.menuContainer, { backgroundColor: colors.cardBackground }]}>
-          {menuItems.map((item, index) => (
+          {menuItems.map((item) => (
             <TouchableOpacity
-              key={index}
+              key={item.label}
               style={[
                 styles.menuItem,
-                index < menuItems.length - 1 && { borderBottomColor: colors.divider, borderBottomWidth: 1 },
+                { borderBottomColor: colors.divider, borderBottomWidth: 1 },
               ]}
             >
               <View style={styles.menuItemLeft}>
@@ -98,7 +124,10 @@ export default function ProfileScreen() {
         </View>
 
         {/* Sign Out */}
-        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: colors.cardBackground }]}>
+        <TouchableOpacity 
+          style={[styles.signOutButton, { backgroundColor: colors.cardBackground }]}
+          onPress={handleLogout}
+        >
           <Ionicons name="log-out-outline" size={22} color={colors.error} />
           <Text style={[styles.signOutText, { color: colors.error }]}>Sign Out</Text>
         </TouchableOpacity>

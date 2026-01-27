@@ -8,16 +8,18 @@ const Job = require('../models/Job');
 const Company = require('../models/Company');
 const Comment = require('../models/Comment');
 const Like = require('../models/Like');
+const JobApplication = require('../models/JobApplication');
 const bcrypt = require('bcryptjs');
 const { faker } = require('@faker-js/faker');
 
-// Create your seeds (users, posts, jobs, companies, comments, and likes)
+// Create your seeds (users, posts, jobs, companies, comments, likes, and applications)
 const NUM_SEED_USERS = 10;
 const NUM_SEED_POSTS = 30;
 const NUM_SEED_COMPANIES = 15;
 const NUM_SEED_JOBS = 20;
 const NUM_SEED_COMMENTS = 50;
 const NUM_SEED_LIKES = 80;
+const NUM_SEED_APPLICATIONS = 40;
 
 const users = [];
 
@@ -159,9 +161,48 @@ for (let i = 0; i < NUM_SEED_LIKES; i++) {
   );
 }
 
+// Create job applications
+const applications = [];
+const statuses = ['pending', 'reviewing', 'accepted', 'rejected'];
+const appliedJobs = new Set(); // Track user-job combinations to avoid duplicates
+
+for (let i = 0; i < NUM_SEED_APPLICATIONS; i++) {
+  let userId, jobId, key;
+  let attempts = 0;
+  
+  // Find a unique user-job combination
+  do {
+    userId = Math.floor(Math.random() * NUM_SEED_USERS);
+    jobId = Math.floor(Math.random() * NUM_SEED_JOBS);
+    key = `${userId}-${jobId}`;
+    attempts++;
+  } while (appliedJobs.has(key) && attempts < 100);
+  
+  if (attempts >= 100) break; // Prevent infinite loop
+  
+  appliedJobs.add(key);
+  
+  // Get the job's questions to create responses
+  const job = jobs[jobId];
+  const responses = job.questions.map(question => ({
+    question: question,
+    answer: faker.lorem.sentences(2)
+  }));
+  
+  applications.push(
+    new JobApplication({
+      job: job._id,
+      applicant: users[userId]._id,
+      responses: responses,
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      coverLetter: Math.random() > 0.3 ? faker.lorem.paragraphs(2) : undefined
+    })
+  );
+}
+
 // Connect to the database and insert your seeds
 const insertSeeds = () => {
-  console.log("Resetting db and seeding users, companies, posts, jobs, comments, and likes...");
+  console.log("Resetting db and seeding users, companies, posts, jobs, comments, likes, and applications...");
 
   User.collection.drop()
     .then(() => Company.collection.drop())
@@ -169,12 +210,14 @@ const insertSeeds = () => {
     .then(() => Job.collection.drop())
     .then(() => Comment.collection.drop())
     .then(() => Like.collection.drop())
+    .then(() => JobApplication.collection.drop())
     .then(() => Company.insertMany(companies))
     .then(() => User.insertMany(users))
     .then(() => Post.insertMany(posts))
     .then(() => Job.insertMany(jobs))
     .then(() => Comment.insertMany(comments))
     .then(() => Like.insertMany(likes))
+    .then(() => JobApplication.insertMany(applications))
     .then(() => {
       console.log("Done!");
       mongoose.disconnect();

@@ -189,7 +189,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
   }, [swipeHistory, unsaveJob]);
 
   // Prefer explicit env var; fall back to sensible platform defaults
-  const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5001/api';
+  const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5001/';
   const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL ?? defaultBaseUrl;
 
   // Fetch jobs from backend API
@@ -200,7 +200,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
         setError(null);
 
         // Adjust the URL based on your backend server address
-        const response = await fetch(`${apiBaseUrl}/jobs`);
+        const response = await fetch(`${apiBaseUrl}/api/jobs`);
         if (!response.ok) {
           throw new Error(`Failed to fetch jobs: ${response.statusText}`);
         }

@@ -20,6 +20,7 @@ const likesRouter = require('./routes/api/likes');
 const jobsRouter = require('./routes/api/jobs');
 const companiesRouter = require('./routes/api/companies');
 const jobApplicationsRouter = require('./routes/api/jobApplications');
+const resumesRouter = require('./routes/api/resumes');
 const csrfRouter = require('./routes/api/csrf');
 
 const app = express();
@@ -62,7 +63,11 @@ app.use('/api/likes', likesRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/companies', companiesRouter);
 app.use('/api/applications', jobApplicationsRouter);
+app.use('/api/resumes', resumesRouter);
 app.use('/api/csrf', csrfRouter);
+
+// Serve uploaded files statically
+app.use('/uploads', express.static('uploads'));
 
 // Express custom middleware for catching all unmatched requests and formatting
 // a 404 error to be sent as the response.

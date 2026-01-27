@@ -28,19 +28,50 @@ users.push(
     username: 'demo-user',
     email: 'demo-user@appacademy.io',
     hashedPassword: bcrypt.hashSync('starwars', 10),
-    phoneNumber: faker.phone.number()
+    phoneNumber: faker.phone.number(),
+    resume: '/uploads/demo-user-resume.pdf',
+    additionalInfo: {
+      workAuthorizationInCountry: true,
+      needsVisa: false,
+      ethnicity: 'Prefer not to say',
+      veteran: 'Not a veteran',
+      disability: 'No',
+      resumeTailoring: true,
+      autoApply: false,
+      gender: 'Prefer not to say',
+      willingToRelocate: true
+    }
   })
 );
+
+const ethnicities = ['Asian', 'Black or African American', 'Hispanic or Latino', 'White', 'Native American', 'Pacific Islander', 'Two or more races', 'Prefer not to say'];
+const veteranStatuses = ['Not a veteran', 'Veteran', 'Active duty', 'Prefer not to say'];
+const disabilityStatuses = ['Yes', 'No', 'Prefer not to say'];
+const genders = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
 for (let i = 1; i < NUM_SEED_USERS; i++) {
   const firstName = faker.person.firstName();
   const lastName = faker.person.lastName();
+  const userId = faker.string.uuid();
+  
   users.push(
     new User({
       username: faker.internet.userName({ firstName, lastName }),
       email: faker.internet.email({ firstName, lastName }),
       hashedPassword: bcrypt.hashSync(faker.internet.password(), 10),
-      phoneNumber: faker.phone.number()
+      phoneNumber: faker.phone.number(),
+      resume: Math.random() > 0.3 ? `/uploads/${userId}-resume.pdf` : undefined,
+      additionalInfo: {
+        workAuthorizationInCountry: Math.random() > 0.3,
+        needsVisa: Math.random() > 0.7,
+        ethnicity: ethnicities[Math.floor(Math.random() * ethnicities.length)],
+        veteran: veteranStatuses[Math.floor(Math.random() * veteranStatuses.length)],
+        disability: disabilityStatuses[Math.floor(Math.random() * disabilityStatuses.length)],
+        resumeTailoring: Math.random() > 0.5,
+        autoApply: Math.random() > 0.6,
+        gender: genders[Math.floor(Math.random() * genders.length)],
+        willingToRelocate: Math.random() > 0.4
+      }
     })
   );
 }

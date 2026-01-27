@@ -68,6 +68,14 @@ Base URL: `http://localhost:5001/api`
 - `PATCH /api/applications/:id/status` - Update application status (requires auth, job poster only)
 - `DELETE /api/applications/:id` - Withdraw application (requires auth, only if pending)
 
+### Resume Upload
+- `POST /api/resumes/upload` - Upload resume (requires auth, multipart/form-data with 'resume' field)
+  - Accepts: PDF, DOC, DOCX
+  - Max size: 5MB
+  - Returns: `{ message, resumePath, user }`
+- `DELETE /api/resumes/delete` - Delete resume (requires auth)
+- `GET /uploads/:filename` - Access uploaded resume files
+
 ## Data Models
 
 ### User
@@ -76,13 +84,25 @@ Base URL: `http://localhost:5001/api`
   username: String,
   email: String,
   phoneNumber: String,
+  resume: String, // URL or file path to uploaded resume
   workHistory: [{
     company: ObjectId (ref: Company),
     title: String,
     startDate: Date,
     endDate: Date,
     current: Boolean
-  }]
+  }],
+  additionalInfo: {
+    workAuthorizationInCountry: Boolean,
+    needsVisa: Boolean,
+    ethnicity: String,
+    veteran: String,
+    disability: String,
+    resumeTailoring: Boolean,
+    autoApply: Boolean,
+    gender: String,
+    willingToRelocate: Boolean
+  }
 }
 ```
 

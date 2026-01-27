@@ -17,6 +17,9 @@ const userSchema = new Schema({
     phoneNumber: {
       type: String
     },
+    resume: {
+      type: String  // URL or file path to uploaded resume
+    },
     workHistory: [{
       company: {
         type: Schema.Types.ObjectId,
@@ -38,7 +41,36 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
       }
-    }]
+    }],
+    additionalInfo: {
+      workAuthorizationInCountry: {
+        type: Boolean
+      },
+      needsVisa: {
+        type: Boolean
+      },
+      ethnicity: {
+        type: String
+      },
+      veteran: {
+        type: String
+      },
+      disability: {
+        type: String
+      },
+      resumeTailoring: {
+        type: Boolean
+      },
+      autoApply: {
+        type: Boolean
+      },
+      gender: {
+        type: String
+      },
+      willingToRelocate: {
+        type: Boolean
+      }
+    }
 }, {
     timestamps: true
 });

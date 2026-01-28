@@ -62,9 +62,9 @@ export default function JobCard({ job, onPress }: JobCardProps) {
 
   const getLocationIcon = (type: Job['locationType']) => {
     switch (type) {
-      case 'remote': return 'globe-outline';
-      case 'hybrid': return 'business-outline';
-      case 'onsite': return 'location-outline';
+      case 'Remote': return 'globe-outline';
+      case 'Hybrid': return 'business-outline';
+      case 'Onsite': return 'location-outline';
     }
   };
 
@@ -141,17 +141,12 @@ export default function JobCard({ job, onPress }: JobCardProps) {
         </View>
       )}
 
-      {/* Highlights */}
-      {Array.isArray(job.highlights) && job.highlights.length > 0 && (
-        <View style={styles.highlightsSection}>
-          {job.highlights.slice(0, 3).map((highlight, index) => (
-            <View key={`highlight-${index}`} style={styles.highlightRow}>
-              <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-              <Text style={[styles.highlightText, { color: colors.text }]} numberOfLines={1}>
-                {String(highlight)}
-              </Text>
-            </View>
-          ))}
+      {/* Description */}
+      {job.description && (
+        <View style={styles.descriptionSection}>
+          <Text style={[styles.highlightText, { color: colors.text }]} numberOfLines={4}>
+        {job.description}
+          </Text>
         </View>
       )}
 
@@ -304,10 +299,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   salaryText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
   },
-  highlightsSection: {
+  descriptionSection: {
     marginBottom: Spacing.md,
     gap: Spacing.xs,
   },

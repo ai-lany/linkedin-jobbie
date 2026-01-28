@@ -87,31 +87,44 @@ function transformBackendJob(id: string, backendJob: any): Job {
     ? String(backendJob.postedBy.username)
     : 'Unknown';
 
+  // Handle company data - it can be populated object or just an ID
+  const companyData = typeof backendJob.company === 'object' && backendJob.company !== null
+    ? backendJob.company
+    : { name: 'Unknown Company', location: 'Unknown', industry: 'Unknown', size: 'Unknown' };
+
+  // Map jobType to employmentType format
+  const employmentTypeMap: { [key: string]: 'full-time' | 'part-time' | 'contract' | 'internship' } = {
+    'Full-time': 'full-time',
+    'Part-time': 'part-time',
+    'Contract': 'contract',
+    'Internship': 'internship',
+  };
+
   return {
-    id: String(id),
-    title: String(backendJob.title || 'Untitled Position'),
+    id,
+    title: backendJob.title || 'Untitled Position',
     company: {
-      id: companyId,
-      name: String(companyName),
+      id: companyData._id || companyData.id || 'unknown',
+      name: companyName,
       logo: logoUrl,
-      industry: companyIndustry,
-      location: companyLocation,
+      industry: companyData.industry || 'Unknown',
+      location: companyData.location || 'Unknown',
     },
-    location: String(backendJob.location || 'Remote'),
-    locationType: 'hybrid',
-    salary: undefined,
-    postedAt: String(backendJob.createdAt || new Date().toISOString()),
-    applicants: 0,
-    easyApply: true,
-    highlights: highlights.length > 0 ? highlights : ['View job details'],
-    skills: skills,
-    experienceLevel: 'mid-senior',
-    employmentType: (backendJob.jobType?.toLowerCase().replace('_', '-') as any) || 'full-time',
-    description: String(backendJob.description || ''),
-    responsibilities: [],
-    qualifications: [],
-    benefits: [],
-    aboutCompany: `Posted by ${posterUsername}`,
+    location: companyLocation || 'Unknown',
+    locationType: backendJob.locationType || '', // Default since backend doesn't have this field
+    salary: backendJob.salary || null, // Backend doesn't have salary data
+    postedAt: backendJob.createdAt || new Date().toISOString(),
+    applicants: backendJob.numberOfApplicants || 0,
+    easyApply: backendJob.questions && backendJob.questions.length > 0,
+    highlights: [""],
+    skills: [], // Could parse from description in the future
+    experienceLevel: 'mid-senior', // Default since backend doesn't have this field
+    employmentType: employmentTypeMap[backendJob.jobType] || 'full-time',
+    description: backendJob.description || '',
+    responsibilities: [], // Could parse from description in the future
+    qualifications: [], // Could parse from description in the future
+    benefits: [], // Backend doesn't have benefits data
+    aboutCompany: companyData.description || `Posted by ${backendJob.postedBy?.username || 'Unknown'}`,
   };
 }
 
@@ -188,8 +201,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
     }
   }, [swipeHistory, unsaveJob]);
 
-  // Prefer explicit env var; fall back to sensible platform defaults
-  const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5001/';
+  // Prefer explicit env var; fall back to sensible platform defaults 
+  const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5001/api';
   const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL ?? defaultBaseUrl;
 
   // Fetch jobs from backend API
@@ -198,34 +211,29 @@ export function JobProvider({ children }: { children: ReactNode }) {
       try {
         setIsLoading(true);
         setError(null);
-
-        // Adjust the URL based on your backend server address
-        const response = await fetch(`${apiBaseUrl}/api/jobs`);
+        
+        console.log('Fetching jobs from:', `${apiBaseUrl}/jobs`);
+        
+        const response = await fetch(`${apiBaseUrl}/jobs`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
         if (!response.ok) {
-          throw new Error(`Failed to fetch jobs: ${response.statusText}`);
+          throw new Error(`Failed to fetch jobs: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
 
+        console.log('Raw API response:', data);
+        
         // Transform backend data to frontend Job type
-        const transformedJobs: Job[] = Object.entries(data)
-          .map(([id, backendJob]: [string, any]) => {
-            try {
-              const job = transformBackendJob(id, backendJob);
-              // Validate all string fields before returning
-              if (!job.title || !job.company.name || !job.location) {
-                console.warn('Skipping job with missing required fields:', id);
-                return null;
-              }
-              return job;
-            } catch (err) {
-              console.error('Error transforming job:', id, err);
-              return null;
-            }
-          })
-          .filter((job): job is Job => job !== null);
-
-        console.log('Successfully loaded jobs:', transformedJobs.length);
+        const transformedJobs: Job[] = Object.entries(data).map(([id, backendJob]: [string, any]) =>
+          transformBackendJob(id, backendJob)
+        );
+        
+        console.log('Transformed jobs:', transformedJobs);
         setJobs(transformedJobs);
       } catch (err) {
         console.error('Error fetching jobs:', err);
@@ -236,7 +244,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     };
 
     fetchJobs();
-  }, []);
+  }, [apiBaseUrl]);
 
   return (
     <JobContext.Provider

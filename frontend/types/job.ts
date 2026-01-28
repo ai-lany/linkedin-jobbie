@@ -13,12 +13,12 @@ export interface Job {
   title: string;
   company: Company;
   location: string;
-  locationType: 'remote' | 'hybrid' | 'onsite';
+  locationType: 'Remote' | 'Hybrid' | 'Onsite';
   salary?: {
     min: number;
     max: number;
     currency: string;
-    period: 'yearly' | 'monthly' | 'hourly';
+    period: string;
   };
   postedAt: string; // ISO date string
   applicants: number;

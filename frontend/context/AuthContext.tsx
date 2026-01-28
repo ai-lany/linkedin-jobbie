@@ -4,7 +4,7 @@ import { User, LoginCredentials, RegisterData, AuthContextType } from '../types/
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001/api';
 
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
   const fetchCurrentUser = async (authToken: string) => {
     try {
-      const response = await fetch(`${API_URL}/api/users/current`, {
+      const response = await fetch(`${API_URL}/users/current`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/users/login`, {
+      const response = await fetch(`${API_URL}/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/users/register`, {
+      const response = await fetch(`${API_URL}/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

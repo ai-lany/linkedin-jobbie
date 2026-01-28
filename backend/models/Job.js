@@ -1,6 +1,26 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const Salary = new Schema({
+  min: {
+    type: Number,
+    required: true
+  },
+  max: {
+    type: Number,
+    required: true
+  },
+  currency: {
+    type: String,
+    required: true
+  },
+  period: {
+    type: String,
+    enum: ['yearly', 'monthly', 'weekly', 'daily', 'hourly'],
+    default: 'yearly'
+  }
+}, { _id : false });
+
 const jobSchema = new Schema({
   company: {
     type: Schema.Types.ObjectId,
@@ -37,6 +57,25 @@ const jobSchema = new Schema({
   postedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User'
+  },
+  numberOfApplicants: {
+    type: Number,
+    default: 0
+  },
+  salary: {
+    type: Salary,
+    default: {
+      min: 0,
+      max: 0,
+      currency: 'USD',
+      period: 'yearly'
+    },
+    required: false
+  },
+  locationType: {
+    type: String,
+    enum: ['Remote', 'Hybrid', 'Onsite'],
+    required: false
   }
 }, {
   timestamps: true

@@ -36,8 +36,11 @@ const { isProduction } = require('./config/keys');
 if (!isProduction) {
     // Enable CORS only in development because React will be on the React
     // development server (http://localhost:3000). (In production, the Express 
-    // server will serve the React files statically.)
-    app.use(cors());
+    // server will serve the React files statically.) 
+    app.use(cors({
+        origin: ['http://localhost:8081', 'http://localhost:3000'],
+        credentials: true
+    }));
 }
 
 // Note: CSRF protection removed - not needed for mobile app using JWT authentication

@@ -16,7 +16,7 @@ const { faker } = require('@faker-js/faker');
 const NUM_SEED_USERS = 10;
 const NUM_SEED_POSTS = 30;
 const NUM_SEED_COMPANIES = 15;
-const NUM_SEED_JOBS = 20;
+const NUM_SEED_JOBS = 50;
 const NUM_SEED_COMMENTS = 50;
 const NUM_SEED_LIKES = 80;
 const NUM_SEED_APPLICATIONS = 40;
@@ -25,9 +25,9 @@ const users = [];
 
 users.push(
   new User({
-    username: 'demo-user',
-    email: 'demo-user@appacademy.io',
-    hashedPassword: bcrypt.hashSync('starwars', 10),
+    username: 'testuser1',
+    email: 'testuser1@gmail.com',
+    hashedPassword: bcrypt.hashSync('password', 10),
     phoneNumber: faker.phone.number(),
     resume: '/uploads/demo-user-resume.pdf',
     additionalInfo: {
@@ -139,6 +139,177 @@ const sampleQuestions = [
   "What motivates you in your work?"
 ];
 
+// Function to generate realistic job descriptions
+const generateJobDescription = (title, companyName, jobType, industry) => {
+  // Varied responsibilities based on job domain
+  const techResponsibilities = [
+    'Design, develop, and maintain scalable software applications',
+    'Write clean, maintainable code following best practices and design patterns',
+    'Participate in architecture discussions and technical design reviews',
+    'Debug and resolve complex technical issues in production environments',
+    'Implement automated testing and CI/CD pipelines',
+    'Optimize application performance and database queries',
+    'Contribute to technical documentation and knowledge sharing',
+    'Conduct code reviews and provide constructive feedback to peers'
+  ];
+
+  const designResponsibilities = [
+    'Create user-centered designs through research and iterative feedback',
+    'Develop wireframes, prototypes, and high-fidelity mockups',
+    'Establish and maintain design systems and component libraries',
+    'Conduct usability testing and incorporate findings into designs',
+    'Collaborate with product managers to define user requirements',
+    'Present design concepts to stakeholders and incorporate feedback',
+    'Stay current with design trends and emerging tools',
+    'Work closely with developers to ensure accurate implementation'
+  ];
+
+  const businessResponsibilities = [
+    'Develop and execute strategic initiatives to drive business growth',
+    'Analyze market trends and competitive landscape',
+    'Build and maintain relationships with key stakeholders',
+    'Create detailed reports and presentations for leadership',
+    'Identify opportunities for process improvement and efficiency',
+    'Manage project timelines and coordinate cross-functional teams',
+    'Monitor key performance indicators and drive data-driven decisions',
+    'Contribute to quarterly planning and annual budgeting processes'
+  ];
+
+  const marketingResponsibilities = [
+    'Develop and execute multi-channel marketing campaigns',
+    'Create compelling content for various platforms and audiences',
+    'Analyze campaign performance metrics and optimize strategies',
+    'Manage social media presence and community engagement',
+    'Collaborate with sales team to generate qualified leads',
+    'Conduct market research to identify customer needs and preferences',
+    'Coordinate with creative team on brand messaging and assets',
+    'Track and report on marketing ROI and conversion rates'
+  ];
+
+  // Varied requirements based on experience level and domain
+  const seniorRequirements = [
+    '7+ years of relevant professional experience',
+    'Proven track record of leading complex projects to successful completion',
+    'Strong leadership and mentorship capabilities',
+    'Excellent strategic thinking and problem-solving skills',
+    'Experience managing stakeholder expectations and relationships',
+    'Advanced knowledge of industry best practices and trends'
+  ];
+
+  const midRequirements = [
+    '3-5 years of relevant professional experience',
+    'Strong foundation in core concepts and methodologies',
+    'Demonstrated ability to work independently and in teams',
+    'Good communication skills with technical and non-technical audiences',
+    'Experience with agile development methodologies',
+    'Proven ability to deliver projects on time and within scope'
+  ];
+
+  const juniorRequirements = [
+    '1-2 years of relevant experience or equivalent education',
+    'Strong foundational knowledge and eagerness to learn',
+    'Good problem-solving and analytical skills',
+    'Ability to work effectively in a collaborative team environment',
+    'Strong attention to detail and commitment to quality',
+    'Excellent communication and interpersonal skills'
+  ];
+
+  const internRequirements = [
+    'Currently pursuing or recently completed relevant degree',
+    'Strong academic performance and demonstrated interest in the field',
+    'Quick learner with ability to adapt to new technologies',
+    'Excellent teamwork and collaboration skills',
+    'Strong work ethic and enthusiasm for professional growth',
+    'Good written and verbal communication abilities'
+  ];
+
+  // Technical skills based on role type
+  const techSkills = [
+    'Experience with modern programming languages (Java, Python, JavaScript, etc.)',
+    'Knowledge of cloud platforms (AWS, Azure, GCP)',
+    'Familiarity with containerization and orchestration tools',
+    'Understanding of RESTful APIs and microservices architecture',
+    'Experience with version control systems (Git)',
+    'Knowledge of database design and SQL/NoSQL technologies'
+  ];
+
+  const designSkills = [
+    'Proficiency in design tools (Figma, Sketch, Adobe Creative Suite)',
+    'Strong understanding of design principles and color theory',
+    'Experience creating responsive and accessible designs',
+    'Knowledge of HTML/CSS fundamentals',
+    'Familiarity with design thinking methodologies',
+    'Understanding of user research and testing techniques'
+  ];
+
+  const businessSkills = [
+    'Advanced Excel and data analysis capabilities',
+    'Experience with CRM and project management tools',
+    'Strong financial acumen and business modeling skills',
+    'Excellent presentation and stakeholder management abilities',
+    'Knowledge of industry regulations and compliance requirements',
+    'Proficiency in business intelligence tools (Tableau, Power BI)'
+  ];
+
+  // Determine job domain from title
+  const titleLower = title.toLowerCase();
+  let responsibilities, technicalSkills, experienceLevel;
+
+  if (titleLower.includes('engineer') || titleLower.includes('developer') || titleLower.includes('architect')) {
+    responsibilities = techResponsibilities;
+    technicalSkills = techSkills;
+  } else if (titleLower.includes('design') || titleLower.includes('ux') || titleLower.includes('ui')) {
+    responsibilities = designResponsibilities;
+    technicalSkills = designSkills;
+  } else if (titleLower.includes('market') || titleLower.includes('brand') || titleLower.includes('content')) {
+    responsibilities = marketingResponsibilities;
+    technicalSkills = businessSkills;
+  } else {
+    responsibilities = businessResponsibilities;
+    technicalSkills = businessSkills;
+  }
+
+  // Determine experience level
+  if (titleLower.includes('senior') || titleLower.includes('lead') || titleLower.includes('principal') || titleLower.includes('director')) {
+    experienceLevel = seniorRequirements;
+  } else if (titleLower.includes('junior') || titleLower.includes('entry') || titleLower.includes('associate')) {
+    experienceLevel = juniorRequirements;
+  } else if (jobType === 'Internship') {
+    experienceLevel = internRequirements;
+  } else {
+    experienceLevel = midRequirements;
+  }
+
+  // Build description with variety
+  const numResponsibilities = 4 + Math.floor(Math.random() * 3);
+  const numRequirements = 3 + Math.floor(Math.random() * 2);
+  const numSkills = 3 + Math.floor(Math.random() * 3);
+
+  const selectedResponsibilities = [...responsibilities]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, numResponsibilities);
+  
+  const selectedRequirements = [...experienceLevel]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, numRequirements);
+  
+  const selectedSkills = [...technicalSkills]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, numSkills);
+
+  const intro = `${companyName} is ${industry === 'Technology' ? 'a leading technology company' : industry === 'Healthcare' ? 'a healthcare organization' : industry === 'Finance' ? 'a financial services firm' : `an established ${industry.toLowerCase()} company`} seeking a talented ${title} to join our team. This ${jobType.toLowerCase()} role offers a unique opportunity to make an impact in a ${jobType === 'Internship' ? 'fast-paced learning environment' : 'dynamic and growing organization'}.`;
+  
+  const aboutRole = `\n\nAbout the Role:\nAs our ${title}, you will play a key role in ${jobType === 'Internship' ? 'supporting our team and gaining hands-on experience' : 'driving initiatives that directly impact our success'}. ${jobType === 'Contract' ? 'This contract position has an initial duration of 6-12 months with potential for extension.' : jobType === 'Part-time' ? 'This part-time role offers 20-30 hours per week with flexible scheduling.' : 'You will work closely with talented professionals and have opportunities for career growth.'}`;
+  
+  const responsibilitiesText = `\n\nKey Responsibilities:\n• ${selectedResponsibilities.join('\n• ')}`;
+  
+  const requirementsText = `\n\nQualifications:\n• ${selectedRequirements.join('\n• ')}\n• ${selectedSkills.join('\n• ')}`;
+  
+  const benefits = `\n\nWhat We Offer:\n• Competitive ${jobType === 'Internship' ? 'stipend and learning opportunities' : 'compensation and benefits package'}\n• ${jobType === 'Full-time' ? 'Comprehensive health, dental, and vision insurance' : 'Flexible work arrangements'}\n• Professional development and training opportunities\n• ${industry === 'Technology' ? 'Cutting-edge technology stack and modern tools' : 'Collaborative and supportive work environment'}\n• ${jobType === 'Full-time' ? 'Generous PTO and work-life balance initiatives' : 'Opportunity to work with industry experts'}`;
+  
+  return intro + aboutRole + responsibilitiesText + requirementsText + benefits;
+};
+
 for (let i = 0; i < NUM_SEED_JOBS; i++) {
   // Randomly select 0-5 questions
   const numQuestions = Math.floor(Math.random() * 6); // 0 to 5
@@ -148,13 +319,17 @@ for (let i = 0; i < NUM_SEED_JOBS; i++) {
     jobQuestions.push(shuffled[j]);
   }
   
+  const company = companies[Math.floor(Math.random() * NUM_SEED_COMPANIES)];
+  const title = faker.person.jobTitle();
+  const jobType = jobTypes[Math.floor(Math.random() * jobTypes.length)];
+  
   jobs.push(
     new Job({
-      company: companies[Math.floor(Math.random() * NUM_SEED_COMPANIES)]._id,
-      title: faker.person.jobTitle(),
-      description: faker.lorem.paragraph(),
+      company: company._id,
+      title: title,
+      description: generateJobDescription(title, company.name, jobType, company.industry),
       location: `${faker.location.city()}, ${faker.location.state()}`,
-      jobType: jobTypes[Math.floor(Math.random() * jobTypes.length)],
+      jobType: jobType,
       questions: jobQuestions,
       postedBy: users[Math.floor(Math.random() * NUM_SEED_USERS)]._id
     })

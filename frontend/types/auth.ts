@@ -14,7 +14,7 @@ export interface User {
     current: boolean;
   }>;
   additionalInfo?: {
-    workAuthorizationInCountry?: string;
+    workAuthorizationInCountry?: boolean;
     needsVisa?: boolean;
     ethnicity?: string;
     veteran?: string;
@@ -43,10 +43,11 @@ export interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   token: string | null;
-  
+
   login: (credentials: LoginCredentials) => Promise<boolean>;
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
   clearError: () => void;
+  updateUserPreferences: (preferences: Partial<User['additionalInfo']>) => Promise<boolean>;
   isAuthenticated: boolean;
 }

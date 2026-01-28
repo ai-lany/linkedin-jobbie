@@ -8,16 +8,20 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  useColorScheme,
   Modal,
+  useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useJobs } from '../../context/JobContext';
-import LinkedInJobDetailModal from '../../components/LinkedInJobDetailModal';
-import { Job } from '../../types/job';
-import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../../constants/theme';
+import { useJobs } from '../context/JobContext';
+import LinkedInJobDetailModal from './LinkedInJobDetailModal';
+import { Job } from '../types/job';
+import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../constants/theme';
 
-export default function LinkedInJobsScreen() {
+interface LinkedInJobsViewProps {
+  onJobbieClick: (job: Job) => void;
+}
+
+export default function LinkedInJobsView({ onJobbieClick }: LinkedInJobsViewProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const { jobs, isLoading } = useJobs();
@@ -44,6 +48,11 @@ export default function LinkedInJobsScreen() {
     if (diffDays === 1) return '1 day ago';
     if (diffDays < 30) return `${diffDays} days ago`;
     return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`;
+  };
+
+  const handleJobbieClickInternal = (job: Job) => {
+    setSelectedJob(null);
+    onJobbieClick(job);
   };
 
   const renderJobItem = ({ item }: { item: Job }) => (
@@ -85,10 +94,7 @@ export default function LinkedInJobsScreen() {
             )}
             {item.easyApply && (
               <View style={styles.easyApplyRow}>
-                <Image
-                  source={require('../../assets/images/linkedin_logo.png')}
-                  style={{ width: 12, height: 12, resizeMode: 'contain' }}
-                />
+                <Ionicons name="flash" size={12} color={colors.primary} />
                 <Text style={[styles.easyApplyText, { color: colors.primary }]}>Easy Apply</Text>
               </View>
             )}
@@ -182,6 +188,7 @@ export default function LinkedInJobsScreen() {
           <LinkedInJobDetailModal
             job={selectedJob}
             onClose={() => setSelectedJob(null)}
+            onJobbieClick={() => handleJobbieClickInternal(selectedJob)}
           />
         )}
       </Modal>

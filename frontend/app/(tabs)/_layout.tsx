@@ -42,6 +42,7 @@ export default function TabLayout() {
           ),
         }}
       />
+  
       <Tabs.Screen
         name="saved"
         options={{
@@ -75,6 +76,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? 'person' : 'person-outline'}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+       <Tabs.Screen
+        name="linkedin-jobs-tab"
+        options={{
+          title: 'Jobs',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'briefcase' : 'briefcase-outline'}
               size={size}
               color={color}
             />

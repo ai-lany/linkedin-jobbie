@@ -14,9 +14,25 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useJobs } from '../../context/JobContext';
-import { useAppMode } from '../../context/AppModeContext';
 import LinkedInJobDetailModal from '../../components/LinkedInJobDetailModal';
 import { Job } from '../../types/job';
+
+// Fallback AppModeContext hook: provides a no-op switchToJobbie until a proper AppModeContext module exists.
+// Remove this stub and restore the original import when ../../context/AppModeContext is added.
+type AppModeHook = {
+  switchToJobbie: (job: Job) => void;
+};
+const useAppMode = (): AppModeHook => {
+  return {
+    switchToJobbie: (job: Job) => {
+      // noop fallback to avoid runtime errors during development
+      // You can add logging to help detect usage of the stub during development
+      // and replace this implementation with the real context provider.
+      // eslint-disable-next-line no-console
+      console.warn('useAppMode (fallback): switchToJobbie called', job?.id ?? job);
+    },
+  };
+};
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../../constants/theme';
 
 export default function LinkedInJobsTabScreen() {

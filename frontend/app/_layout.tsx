@@ -6,6 +6,7 @@ import { ThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native
 import * as SplashScreen from 'expo-splash-screen';
 import { JobProvider } from '../context/JobContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { AppModeProvider } from '../context/AppModeContext';
 import 'react-native-reanimated';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -75,19 +76,21 @@ function RootLayoutNav() {
 
   return (
     <JobProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? JobbieDark : JobbieLight}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: 'slide_from_right',
-          }}
-        >
-          <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      </ThemeProvider>
+      <AppModeProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? JobbieDark : JobbieLight}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          >
+            <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        </ThemeProvider>
+      </AppModeProvider>
     </JobProvider>
   );
 }

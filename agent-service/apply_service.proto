@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package apply;
+
+// Defines a simple Apply service that accepts job details and a user profile
+// and returns whether the application succeeded.
+
+message Job {
+  string id = 1;
+  string title = 2;
+  string company = 3;
+  string location = 4;
+  string salary = 5;
+  string type = 6;
+  string experience = 7;
+  string description = 8;
+  bool easy_apply = 9;
+}
+
+message Profile {
+  string name = 1;
+  string email = 2;
+  string headline = 3;
+  string summary = 4;
+  repeated string skills = 5;
+}
+
+message ApplyRequest {
+  Job job = 1;
+  Profile profile = 2;
+}
+
+message ApplyResponse {
+  bool success = 1;
+  string message = 2;
+  string application_id = 3;
+}
+
+service ApplyService {
+  rpc Apply(ApplyRequest) returns (ApplyResponse);
+}

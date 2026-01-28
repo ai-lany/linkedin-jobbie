@@ -1,0 +1,21 @@
+You are an assistant refining a candidate's resume for a specific role. Produce **Markdown** output only, no extra commentary.
+
+### Job
+- Title: {{ job.title }}
+- Company: {{ job.company }}
+- Location: {{ job.location }}
+- Type: {{ job.type }}
+- Experience: {{ job.experience }}
+- Description: {{ job.description }}
+
+### Candidate
+- Name: {{ profile.name }}
+- Email: {{ profile.email }}
+- Headline: {{ profile.headline }}
+- Summary: {{ profile.summary }}
+- Skills: {{ profile.skills | join(", ") }}
+
+### Output (Markdown)
+- A section `## Tailored Summary` with 3-5 sentences highlighting fit.
+- A section `## Skill Alignment` with bullet points (max 5) mapping candidate skills to the role.
+- Keep concise; no HTML; no code fences.

@@ -55,7 +55,7 @@ export default function LinkedInJobsTabScreen() {
     switchToJobbie(job);
     // Navigate to swipe page after switching mode
     setTimeout(() => {
-      router.push('/(tabs)/');
+      router.push('/');
     }, 100);
   };
 
@@ -94,18 +94,25 @@ export default function LinkedInJobsTabScreen() {
                 {formatSalary(item.salary)}
               </Text>
             )}
-            {item.easyApply && (
-              <View style={styles.easyApplyRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 'auto' }}>
+                <Text style={[styles.jobPosted, { color: colors.textMuted, marginTop: 0 }]}>
+                  Posted {formatPostedTime(item.postedAt)}
+                </Text>
+                <Text style={[styles.jobPosted, { color: colors.textMuted, marginTop: 0, marginLeft: 4 }]}>
+                  ⋅
+                </Text>
+              </View>
+              {item.easyApply && (
+              <View style={[styles.easyApplyRow, { marginLeft: 6 }]}>
                 <Image
-                  source={require('../../assets/images/linkedin_logo.png')}
-                  style={{ width: 12, height: 12, resizeMode: 'contain' }}
+                source={require('../../assets/images/linkedin_logo.png')}
+                style={{ width: 12, height: 12, resizeMode: 'contain' }}
                 />
                 <Text style={[styles.easyApplyText, { color: colors.primary }]}>Easy Apply</Text>
               </View>
-            )}
-            <Text style={[styles.jobPosted, { color: colors.textMuted }]}>
-              Posted {formatPostedTime(item.postedAt)}
-            </Text>
+              )}
+            </View>
           </View>
         </View>
 

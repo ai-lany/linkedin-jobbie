@@ -54,7 +54,8 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return;
+    console.log('Auth state:', { isAuthenticated, isLoading });
+    if (isLoading) return; // Wait until auth state is loaded
 
     const inAuthGroup = segments[0] === '(auth)';
 

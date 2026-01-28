@@ -20,29 +20,56 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const loadAuthData = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('authToken');
+      const storedUser = await AsyncStorage.getItem('currentUser');
+      
+      console.log('Loading auth data...', { 
+        hasToken: !!storedToken, 
+        hasUser: !!storedUser 
+      });
+      
       if (storedToken) {
         setToken(storedToken);
-        // Fetch current user data
+        
+        // Set stored user immediately for faster UI
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            console.log('Setting cached user:', user.username);
+            setCurrentUser(user);
+          } catch (err) {
+            console.error('Failed to parse stored user:', err);
+          }
+        }
+        
+        // Fetch fresh user data in background
         await fetchCurrentUser(storedToken);
+      } else {
+        console.log('No stored token found');
       }
     } catch (err) {
       console.error('Failed to load auth data:', err);
     } finally {
       setIsLoading(false);
+      console.log('Auth loading complete');
     }
   };
 
   const fetchCurrentUser = async (authToken: string) => {
     try {
+      console.log('Fetching current user with token:', authToken.substring(0, 20) + '...');
       const response = await fetch(`${API_URL}/users/current`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
         },
       });
 
+      console.log('Current user response status:', response.status);
+
       if (response.ok) {
         const userData = await response.json();
-        setCurrentUser({
+        console.log('Fetched user data:', userData.username);
+        const user = {
           id: userData._id,
           username: userData.username,
           email: userData.email,
@@ -50,14 +77,21 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           resume: userData.resume,
           workHistory: userData.workHistory,
           additionalInfo: userData.additionalInfo,
-        });
+        };
+        setCurrentUser(user);
+        
+        // Store user data for faster loading next time
+        await AsyncStorage.setItem('currentUser', JSON.stringify(user));
       } else {
         // Token is invalid, clear it
+        const errorText = await response.text();
+        console.log('Token invalid, status:', response.status, 'error:', errorText);
         await logout();
       }
     } catch (err) {
       console.error('Failed to fetch current user:', err);
-      setError('Failed to load user data');
+      // Don't logout on network errors, keep using cached user data
+      // setError('Failed to load user data');
     }
   };
 
@@ -87,7 +121,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       setToken(data.token);
 
       // Set user data
-      setCurrentUser({
+      const user = {
         id: data.user._id,
         username: data.user.username,
         email: data.user.email,
@@ -95,7 +129,11 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         resume: data.user.resume,
         workHistory: data.user.workHistory,
         additionalInfo: data.user.additionalInfo,
-      });
+      };
+      setCurrentUser(user);
+      
+      // Store user data
+      await AsyncStorage.setItem('currentUser', JSON.stringify(user));
 
       setIsLoading(false);
       return true;
@@ -139,7 +177,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       setToken(responseData.token);
 
       // Set user data
-      setCurrentUser({
+      const user = {
         id: responseData.user._id,
         username: responseData.user.username,
         email: responseData.user.email,
@@ -147,7 +185,11 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         resume: responseData.user.resume,
         workHistory: responseData.user.workHistory,
         additionalInfo: responseData.user.additionalInfo,
-      });
+      };
+      setCurrentUser(user);
+      
+      // Store user data
+      await AsyncStorage.setItem('currentUser', JSON.stringify(user));
 
       setIsLoading(false);
       return true;
@@ -162,6 +204,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await AsyncStorage.removeItem('authToken');
+      await AsyncStorage.removeItem('currentUser');
       setToken(null);
       setCurrentUser(null);
       setError(null);

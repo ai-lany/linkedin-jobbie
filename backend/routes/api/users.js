@@ -81,8 +81,11 @@ router.get('/current', restoreUser, (req, res) => {
     // In development, allow React server to gain access to the CSRF token
     // whenever the current user information is first loaded into the
     // React application
-    const csrfToken = req.csrfToken();
-    res.cookie("CSRF-TOKEN", csrfToken);
+    // Only set CSRF token if the function is available
+    if (typeof req.csrfToken === 'function') {
+      const csrfToken = req.csrfToken();
+      res.cookie("CSRF-TOKEN", csrfToken);
+    }
   }
   if (!req.user) return res.json(null);
   res.json({

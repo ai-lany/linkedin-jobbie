@@ -29,6 +29,9 @@ const jobApplicationSchema = new Schema({
   },
   coverLetter: {
     type: String
+  },
+  resume: {
+    type: String
   }
 }, {
   timestamps: true

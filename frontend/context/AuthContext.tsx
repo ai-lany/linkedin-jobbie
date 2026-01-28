@@ -217,6 +217,49 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     setError(null);
   }, []);
 
+  const updateUserPreferences = useCallback(async (preferences: Partial<User['additionalInfo']>): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/users/preferences`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(preferences),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Failed to update preferences');
+        setIsLoading(false);
+        return false;
+      }
+
+      // Update currentUser with new data
+      setCurrentUser({
+        id: data.user._id,
+        username: data.user.username,
+        email: data.user.email,
+        phoneNumber: data.user.phoneNumber,
+        resume: data.user.resume,
+        workHistory: data.user.workHistory,
+        additionalInfo: data.user.additionalInfo,
+      });
+
+      setIsLoading(false);
+      return true;
+    } catch (err) {
+      console.error('Preferences update error:', err);
+      setError('Network error. Please try again.');
+      setIsLoading(false);
+      return false;
+    }
+  }, [token]);
+
   const value: AuthContextType = useMemo(() => ({
     currentUser,
     isLoading,
@@ -226,8 +269,9 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     register,
     logout,
     clearError,
+    updateUserPreferences,
     isAuthenticated: !!currentUser && !!token,
-  }), [currentUser, isLoading, error, token, login, register, logout, clearError]);
+  }), [currentUser, isLoading, error, token, login, register, logout, clearError, updateUserPreferences]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

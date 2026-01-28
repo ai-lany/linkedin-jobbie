@@ -91,8 +91,70 @@ router.get('/current', restoreUser, (req, res) => {
   res.json({
     _id: req.user._id,
     username: req.user.username,
-    email: req.user.email
+    email: req.user.email,
+    phoneNumber: req.user.phoneNumber,
+    resume: req.user.resume,
+    workHistory: req.user.workHistory,
+    additionalInfo: req.user.additionalInfo
   });
+});
+
+router.patch('/preferences', restoreUser, async (req, res, next) => {
+  if (!req.user) {
+    const err = new Error('Unauthorized');
+    err.statusCode = 401;
+    return next(err);
+  }
+
+  try {
+    const allowedFields = [
+      'workAuthorizationInCountry',
+      'needsVisa',
+      'ethnicity',
+      'veteran',
+      'disability',
+      'resumeTailoring',
+      'autoApply',
+      'gender',
+      'willingToRelocate'
+    ];
+
+    // Build update object with dot notation for nested additionalInfo fields
+    const updateObj = {};
+    Object.keys(req.body).forEach(key => {
+      if (allowedFields.includes(key)) {
+        updateObj[`additionalInfo.${key}`] = req.body[key];
+      }
+    });
+
+    // Update user document
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateObj },
+      { new: true, runValidators: true }
+    ).select('-hashedPassword');
+
+    if (!user) {
+      const err = new Error('User not found');
+      err.statusCode = 404;
+      return next(err);
+    }
+
+    return res.json({
+      message: 'Preferences updated successfully',
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        resume: user.resume,
+        workHistory: user.workHistory,
+        additionalInfo: user.additionalInfo
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = router;

@@ -104,6 +104,11 @@ export default function ProfileScreen() {
                 styles.menuItem,
                 { borderBottomColor: colors.divider, borderBottomWidth: 1 },
               ]}
+              onPress={() => {
+                if (item.label === 'Job Preferences') {
+                  router.push('/(tabs)/preferences');
+                }
+              }}
             >
               <View style={styles.menuItemLeft}>
                 <Ionicons name={item.icon as any} size={22} color={colors.textSecondary} />

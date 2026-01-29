@@ -71,7 +71,7 @@ function RootLayoutNav() {
       // Redirect to LinkedIn mode if authenticated but not in any expected group
       router.replace('/(linkedin)/home');
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, segments, router]);
 
   useEffect(() => {
     // Hide splash screen after the app is ready

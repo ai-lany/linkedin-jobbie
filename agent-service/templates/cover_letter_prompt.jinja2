@@ -1,0 +1,22 @@
+Write a concise, professional cover letter tailored to the job.
+
+Job:
+- Title: {{ job.title }}
+- Company: {{ job.company }}
+- Location: {{ job.location }}
+- Type: {{ job.type }}
+- Experience: {{ job.experience }}
+- Description: {{ job.description }}
+
+Candidate:
+- Name: {{ profile.name }}
+- Email: {{ profile.email }}
+- Headline: {{ profile.headline }}
+- Summary: {{ profile.summary }}
+- Skills: {{ profile.skills | join(", ") }}
+- Resume: {{ resume_text }}
+
+Constraints:
+- 3 short paragraphs maximum
+- Highlight 2-3 relevant strengths from the resume
+- Close with a confident call to action

@@ -53,7 +53,7 @@ export default function ApplicationSuccess({
     // Animate content with delay
     contentOpacity.value = withDelay(400, withTiming(1, { duration: 400 }));
     contentTranslateY.value = withDelay(400, withSpring(0, { damping: 15, stiffness: 200 }));
-  }, []);
+  }, [checkOpacity, checkScale, contentOpacity, contentTranslateY]);
 
   const checkStyle = useAnimatedStyle(() => ({
     transform: [{ scale: checkScale.value }],

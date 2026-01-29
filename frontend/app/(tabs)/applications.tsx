@@ -20,6 +20,8 @@ interface AppliedJob {
   job: Job;
   appliedAt: string;
   applicationData: EasyApplyData;
+  status: 'pending' | 'completed' | 'failed';
+  applicationId?: string;
 }
 
 export default function ApplicationsScreen() {
@@ -41,29 +43,34 @@ export default function ApplicationsScreen() {
     return `Applied ${Math.floor(diffDays / 7)} weeks ago`;
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: 'pending' | 'completed' | 'failed') => {
     switch (status) {
-      case 'submitted':
-        return colors.primary;
-      case 'viewed':
-        return colors.warning;
-      case 'interview':
-        return colors.success;
-      case 'rejected':
-        return colors.error;
+      case 'pending':
+        return colors.warning;  // Orange/yellow for processing
+      case 'completed':
+        return colors.success;  // Green for success
+      case 'failed':
+        return colors.error;    // Red for errors
       default:
         return colors.textMuted;
     }
   };
 
-  const getStatusLabel = () => {
-    // For demo, all are submitted
-    return 'Submitted';
+  const getStatusLabel = (status: 'pending' | 'completed' | 'failed') => {
+    switch (status) {
+      case 'pending':
+        return 'Processing';
+      case 'completed':
+        return 'Submitted';
+      case 'failed':
+        return 'Failed';
+      default:
+        return 'Unknown';
+    }
   };
 
   const renderApplicationItem = ({ item }: { item: AppliedJob }) => {
-    const { job, appliedAt } = item;
-    const status = 'submitted'; // Demo status
+    const { job, appliedAt, status } = item;
 
     return (
       <TouchableOpacity
@@ -93,9 +100,27 @@ export default function ApplicationsScreen() {
             <Text style={[styles.location, { color: colors.textMuted }]}>{job.location}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(status)}20` }]}>
-            <View style={[styles.statusDot, { backgroundColor: getStatusColor(status) }]} />
+            {status === 'pending' && (
+              <Ionicons
+                name="hourglass-outline"
+                size={12}
+                color={getStatusColor(status)}
+                style={{ marginRight: 4 }}
+              />
+            )}
+            {status === 'failed' && (
+              <Ionicons
+                name="close-circle"
+                size={12}
+                color={getStatusColor(status)}
+                style={{ marginRight: 4 }}
+              />
+            )}
+            {status === 'completed' && (
+              <View style={[styles.statusDot, { backgroundColor: getStatusColor(status) }]} />
+            )}
             <Text style={[styles.statusText, { color: getStatusColor(status) }]}>
-              {getStatusLabel()}
+              {getStatusLabel(status)}
             </Text>
           </View>
         </View>
@@ -123,7 +148,7 @@ export default function ApplicationsScreen() {
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text }]}>No applications yet</Text>
       <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-        Start swiping right on jobs you're interested in. Your applications will appear here.
+        Start swiping right on jobs you are interested in. Your applications will appear here.
       </Text>
     </View>
   );
@@ -138,6 +163,16 @@ export default function ApplicationsScreen() {
         </Text>
       </View>
 
+      {/* Pending count banner */}
+      {appliedJobs.filter(app => app.status === 'pending').length > 0 && (
+        <View style={[styles.pendingBanner, { backgroundColor: `${colors.warning}20` }]}>
+          <Ionicons name="hourglass" size={16} color={colors.warning} />
+          <Text style={[styles.pendingBannerText, { color: colors.warning }]}>
+            {appliedJobs.filter(app => app.status === 'pending').length} application(s) processing
+          </Text>
+        </View>
+      )}
+
       {/* Stats Row */}
       {appliedJobs.length > 0 && (
         <View style={[styles.statsRow, { backgroundColor: colors.cardBackground }]}>
@@ -147,13 +182,17 @@ export default function ApplicationsScreen() {
           </View>
           <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.warning }]}>0</Text>
-            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Viewed</Text>
+            <Text style={[styles.statNumber, { color: colors.warning }]}>
+              {appliedJobs.filter(app => app.status === 'pending').length}
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Processing</Text>
           </View>
           <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.success }]}>0</Text>
-            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Interviews</Text>
+            <Text style={[styles.statNumber, { color: colors.success }]}>
+              {appliedJobs.filter(app => app.status === 'completed').length}
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Submitted</Text>
           </View>
         </View>
       )}
@@ -207,6 +246,21 @@ const styles = StyleSheet.create({
   headerCount: {
     fontSize: FontSize.sm,
     marginTop: 4,
+  },
+  pendingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
+    borderRadius: BorderRadius.md,
+  },
+  pendingBannerText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
   },
   statsRow: {
     flexDirection: 'row',

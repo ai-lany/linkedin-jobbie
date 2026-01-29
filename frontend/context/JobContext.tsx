@@ -11,6 +11,8 @@ interface AppliedJob {
   job: Job;
   appliedAt: string;
   applicationData: EasyApplyData;
+  status: 'pending' | 'completed' | 'failed';
+  applicationId?: string;
 }
 
 interface JobContextType {
@@ -28,8 +30,9 @@ interface JobContextType {
 
   // Applied jobs
   appliedJobs: AppliedJob[];
-  applyToJob: (job: Job, data: EasyApplyData) => void;
+  applyToJob: (job: Job, data: EasyApplyData, status?: 'pending' | 'completed' | 'failed', applicationId?: string) => void;
   isJobApplied: (jobId: string) => boolean;
+  updateApplicationStatus: (jobId: string, status: 'pending' | 'completed' | 'failed', applicationId?: string) => void;
 
   // Swipe history for undo
   swipeHistory: { job: Job; direction: SwipeDirection }[];
@@ -125,7 +128,7 @@ function transformBackendJob(id: string, backendJob: any): Job {
     qualifications: [], // Could parse from description in the future
     benefits: [], // Backend doesn't have benefits data
     aboutCompany: companyData.description || `Posted by ${backendJob.postedBy?.username || 'Unknown'}`,
-    questions: backendJob.questions || [], // Include questions from backend
+    questions: backendJob.questions || [],
   };
 }
 
@@ -159,21 +162,38 @@ export function JobProvider({ children }: { children: ReactNode }) {
     [savedJobs]
   );
 
-  const applyToJob = useCallback((job: Job, data: EasyApplyData) => {
+  const applyToJob = useCallback((
+    job: Job,
+    data: EasyApplyData,
+    status: 'pending' | 'completed' | 'failed' = 'completed',
+    applicationId?: string
+  ) => {
     setAppliedJobs((prev) => {
       if (prev.some((a) => a.job.id === job.id)) return prev;
-      return [...prev, { job, appliedAt: new Date().toISOString(), applicationData: data }];
+      return [...prev, {
+        job,
+        appliedAt: new Date().toISOString(),
+        applicationData: data,
+        status,
+        applicationId
+      }];
     });
     // Remove from saved if it was saved
     setSavedJobs((prev) => prev.filter((s) => s.job.id !== job.id));
-    // Remove from swipe history since applied jobs can't be undone
-    setSwipeHistory((prev) => {
-      const lastSwipe = prev[prev.length - 1];
-      if (lastSwipe && lastSwipe.job.id === job.id) {
-        return prev.slice(0, -1);
-      }
-      return prev;
-    });
+  }, []);
+
+  const updateApplicationStatus = useCallback((
+    jobId: string,
+    status: 'pending' | 'completed' | 'failed',
+    applicationId?: string
+  ) => {
+    setAppliedJobs((prev) =>
+      prev.map(app =>
+        app.job.id === jobId
+          ? { ...app, status, applicationId: applicationId || app.applicationId }
+          : app
+      )
+    );
   }, []);
 
   const isJobApplied = useCallback(
@@ -211,7 +231,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
   }, [swipeHistory, unsaveJob]);
 
   // Prefer explicit env var; fall back to sensible platform defaults 
-  const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5001/api';
+  const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5001/api' : 'http://localhost:5001/api';
   const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL ?? defaultBaseUrl;
 
   // Fetch jobs from backend API
@@ -220,15 +240,15 @@ export function JobProvider({ children }: { children: ReactNode }) {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         console.log('Fetching jobs from:', `${apiBaseUrl}/jobs`);
-        
+
         const response = await fetch(`${apiBaseUrl}/jobs`, {
           headers: {
             'Content-Type': 'application/json',
           },
         });
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch jobs: ${response.status} ${response.statusText}`);
         }
@@ -236,12 +256,12 @@ export function JobProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
 
         console.log('Raw API response:', data);
-        
+
         // Transform backend data to frontend Job type
         const transformedJobs: Job[] = Object.entries(data).map(([id, backendJob]: [string, any]) =>
           transformBackendJob(id, backendJob)
         );
-        
+
         console.log('Transformed jobs:', transformedJobs);
         setJobs(transformedJobs);
       } catch (err) {
@@ -269,6 +289,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
         appliedJobs,
         applyToJob,
         isJobApplied,
+        updateApplicationStatus,
         swipeHistory,
         handleSwipe,
         handleUndo,

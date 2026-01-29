@@ -76,6 +76,19 @@ Base URL: `http://localhost:5001/api`
 - `DELETE /api/resumes/delete` - Delete resume (requires auth)
 - `GET /uploads/:filename` - Access uploaded resume files
 
+### AI Agent (Auto-Apply)
+- `POST /api/agent/cover-letter` - Generate AI cover letter for job (requires auth)
+  - Body: `{ jobId: string }`
+  - Returns: `{ coverLetter: string, message: string }`
+- `POST /api/agent/answer-questions` - AI answers application questions (requires auth)
+  - Body: `{ jobId: string, questions: string[] }`
+  - Returns: `{ success: boolean, answers: [{ question, answer }], message: string }`
+- `POST /api/agent/auto-apply/:jobId` - **Background auto-apply** (requires auth)
+  - Orchestrates: Resume tailoring → Cover letter → Question answering
+  - Automatically submits application to database
+  - Returns: `{ success: boolean, applicationId: string, message: string }`
+  - Processing time: ~15-20 seconds (runs in background)
+
 ## Data Models
 
 ### User
@@ -180,7 +193,104 @@ Base URL: `http://localhost:5001/api`
 }
 ```
 
+## Auto-Apply Architecture
+
+The backend integrates with a Python gRPC Agent Service for AI-powered auto-apply functionality.
+
+### How It Works
+
+```
+Frontend swipes right (auto-apply enabled)
+    ↓
+POST /api/agent/auto-apply/:jobId
+    ↓
+Backend fetches job from MongoDB
+    ↓
+Backend calls Agent Service via gRPC (AutoApply RPC)
+    ↓
+Agent Service runs orchestrator:
+  1. Resume tailoring (~4s)
+  2. Cover letter generation (~4s)
+  3. Question answering (~4s)
+    ↓
+Backend receives: refined_resume, cover_letter, answers
+    ↓
+Backend saves JobApplication to MongoDB
+    ↓
+Returns: { success: true, applicationId: "xxx" }
+```
+
+### Agent Service Integration
+
+Located in `services/agentClient.js`:
+
+```javascript
+const { autoApply } = require('./services/agentClient');
+
+// Usage in route
+const response = await autoApply({
+  job: { ... },
+  profile: { ... },
+  questions: [ ... ]
+});
+```
+
+**gRPC Connection**:
+- Agent Service runs on `localhost:50051`
+- Protocol defined in `agent-service/apply_service.proto`
+- See `agent-service/README.md` for service details
+
+### Requirements for Auto-Apply
+
+**User must have**:
+1. Email address
+2. Phone number
+3. Resume uploaded
+4. `additionalInfo.autoApply` set to `true`
+
+**Enable for a user**:
+```bash
+# From project root
+node enable-auto-apply.js user@example.com
+```
+
+### Testing
+
+**Test auto-apply endpoint**:
+```bash
+# Make sure Agent Service is running
+cd agent-service
+docker-compose up -d
+
+# Run system test
+cd ..
+./test-system.sh
+```
+
+**Test gRPC connection**:
+```bash
+# Check if agent service is listening
+lsof -i:50051
+```
+
+### Error Handling
+
+- **Duplicate application**: Returns 400 with message "You have already applied to this job"
+- **Agent service failure**: Returns 500 with error message
+- **Missing user data**: Frontend shows manual Easy Apply modal instead
+- **Timeout**: Agent service calls timeout after 30 seconds
+
+### Performance
+
+- **API response time**: < 100ms (triggers background work)
+- **Agent processing**: ~15-20 seconds total
+  - Resume tailoring: ~4s
+  - Cover letter: ~4s
+  - Question answering: ~4s
+- **Non-blocking**: User can continue using app while processing
+
 ## Notes
 - All authenticated routes require a valid JWT token in the Authorization header
 - CSRF token is required for state-changing operations (POST, PATCH, DELETE)
 - Job applications prevent duplicate submissions (one application per user per job)
+- Agent Service must be running for auto-apply to work (see `agent-service/README.md`)

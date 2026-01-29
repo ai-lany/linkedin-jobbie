@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Image,
   SafeAreaView,
   useColorScheme,
+  Animated,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import JobbieIcon from './JobbieIcon';
@@ -23,6 +25,7 @@ interface LinkedInJobDetailModalProps {
 export default function LinkedInJobDetailModal({ job, onClose, onJobbieClick }: LinkedInJobDetailModalProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const formatPostedTime = (dateString: string) => {
     const posted = new Date(dateString);
@@ -35,11 +38,30 @@ export default function LinkedInJobDetailModal({ job, onClose, onJobbieClick }: 
     return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`;
   };
 
+  const animatePress = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.85,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const handleJobbieClick = () => {
-    onClose();
-    if (onJobbieClick) {
-      onJobbieClick();
-    }
+    animatePress();
+    setTimeout(() => {
+      onClose();
+      if (onJobbieClick) {
+        onJobbieClick();
+      }
+    }, 150);
   };
 
   return (
@@ -116,13 +138,17 @@ export default function LinkedInJobDetailModal({ job, onClose, onJobbieClick }: 
           </TouchableOpacity>
 
           {/* Jobbie Icon Button */}
-          <TouchableOpacity
-            style={[styles.jobbieButton, { backgroundColor: '#FF6B6B', borderColor: '#FF4757' }]}
-            onPress={handleJobbieClick}
-            activeOpacity={0.8}
-          >
-            <JobbieIcon size={24} color="#FFFFFF" />
-          </TouchableOpacity>
+          <Pressable onPress={handleJobbieClick}>
+            <Animated.View
+              style={[
+                styles.jobbieButton,
+                { backgroundColor: '#FF6B6B', borderColor: '#FF4757' },
+                { transform: [{ scale: scaleAnim }] }
+              ]}
+            >
+              <JobbieIcon size={24} color="#FFFFFF" />
+            </Animated.View>
+          </Pressable>
 
           <TouchableOpacity
             style={[styles.saveButton, { borderColor: colors.primary }]}

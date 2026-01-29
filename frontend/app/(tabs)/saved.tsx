@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useJobs } from '../../context/JobContext';
+import { useAuth } from '../../context/AuthContext';
 import ExpandedJobCard from '../../components/ExpandedJobCard';
 import EasyApplyModal from '../../components/EasyApplyModal';
 import { Job, EasyApplyData } from '../../types/job';
@@ -20,6 +21,7 @@ import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../../const
 export default function SavedScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { currentUser, token } = useAuth();
 
   const { savedJobs, unsaveJob, applyToJob } = useJobs();
 
@@ -200,6 +202,8 @@ export default function SavedScreen() {
         {applyingJob && (
           <EasyApplyModal
             job={applyingJob}
+            currentUser={currentUser}
+            token={token}
             onClose={() => setApplyingJob(null)}
             onSubmit={handleApplySubmit}
           />

@@ -125,6 +125,7 @@ function transformBackendJob(id: string, backendJob: any): Job {
     qualifications: [], // Could parse from description in the future
     benefits: [], // Backend doesn't have benefits data
     aboutCompany: companyData.description || `Posted by ${backendJob.postedBy?.username || 'Unknown'}`,
+    questions: backendJob.questions || [], // Include questions from backend
   };
 }
 

@@ -43,7 +43,7 @@ interface WorkHistoryFormData {
 
 export default function WorkExperienceScreen() {
   const router = useRouter();
-  const { token } = useAuth();
+  const { token, refreshUser } = useAuth();
   const colorScheme = useColorScheme();
   const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
@@ -151,9 +151,10 @@ export default function WorkExperienceScreen() {
         [
           {
             text: 'OK',
-            onPress: () => {
+            onPress: async () => {
               setIsModalVisible(false);
-              fetchWorkHistory();
+              await fetchWorkHistory();
+              await refreshUser(); // Refresh user data to update count badge
             },
           },
         ]
@@ -201,7 +202,8 @@ export default function WorkExperienceScreen() {
       }
 
       Alert.alert('Success', 'Work experience deleted successfully!');
-      fetchWorkHistory();
+      await fetchWorkHistory();
+      await refreshUser(); // Refresh user data to update count badge
     } catch (err: any) {
       console.error('Delete error:', err);
       Alert.alert('Error', err.message || 'Failed to delete work history. Please try again.');

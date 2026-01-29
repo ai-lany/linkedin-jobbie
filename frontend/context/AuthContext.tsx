@@ -217,6 +217,17 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     setError(null);
   }, []);
 
+  const refreshUser = useCallback(async (): Promise<boolean> => {
+    if (!token) return false;
+    try {
+      await fetchCurrentUser(token);
+      return true;
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
+      return false;
+    }
+  }, [token]);
+
   const updateUserPreferences = useCallback(async (preferences: Partial<User['additionalInfo']>): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
@@ -269,9 +280,10 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     register,
     logout,
     clearError,
+    refreshUser,
     updateUserPreferences,
     isAuthenticated: !!currentUser && !!token,
-  }), [currentUser, isLoading, error, token, login, register, logout, clearError, updateUserPreferences]);
+  }), [currentUser, isLoading, error, token, login, register, logout, clearError, refreshUser, updateUserPreferences]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

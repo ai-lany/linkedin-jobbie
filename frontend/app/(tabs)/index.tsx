@@ -114,6 +114,12 @@ export default function DiscoverScreen() {
     [applyingJob, applyToJob]
   );
 
+  // Handle modal close without submitting - bring the job back
+  const handleApplyClose = useCallback(() => {
+    setApplyingJob(null);
+    handleUndo(); // Undo the swipe to bring the job card back
+  }, [handleUndo]);
+
   return (
     <GestureHandlerRootView style={styles.gestureRoot}>
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -218,7 +224,7 @@ export default function DiscoverScreen() {
               job={applyingJob}
               currentUser={currentUser}
               token={token}
-              onClose={() => setApplyingJob(null)}
+              onClose={handleApplyClose}
               onSubmit={handleApplySubmit}
             />
           )}

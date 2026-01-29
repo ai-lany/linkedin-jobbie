@@ -1,12 +1,5 @@
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { Redirect } from 'expo-router';
 
 export default function LinkedInIndex() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace('/(linkedin)/home');
-  }, []);
-
-  return null;
+  return <Redirect href="/(linkedin)/jobs" />;
 }

@@ -496,6 +496,75 @@ export default function EasyApplyModal({ job, currentUser, token, onClose, onSub
         </View>
       )}
 
+      {/* Preferences & EEO */}
+      {formData.preferences && (
+        <View style={[styles.reviewCard, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.reviewSectionTitle, { color: colors.text }]}>Preferences & EEO</Text>
+
+          {/* Work Authorization */}
+          <View style={styles.preferenceReviewSection}>
+            <Text style={[styles.preferenceReviewTitle, { color: colors.textSecondary }]}>
+              Work Authorization
+            </Text>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>
+                Authorized to work in country?
+              </Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.workAuthorizationInCountry ? 'Yes' : 'No'}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>
+                Need visa sponsorship?
+              </Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.needsVisa ? 'Yes' : 'No'}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>
+                Willing to relocate?
+              </Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.willingToRelocate ? 'Yes' : 'No'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Equal Opportunity */}
+          <View style={styles.preferenceReviewSection}>
+            <Text style={[styles.preferenceReviewTitle, { color: colors.textSecondary }]}>
+              Equal Opportunity
+            </Text>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>Gender</Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.gender}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>Ethnicity</Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.ethnicity}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>Veteran Status</Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]} numberOfLines={2}>
+                {formData.preferences.veteran}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>Disability Status</Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]} numberOfLines={2}>
+                {formData.preferences.disability}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* Consent */}
       <View style={[styles.consentBox, { backgroundColor: colors.primaryLight }]}>
         <Ionicons name="information-circle" size={20} color={colors.primary} />
@@ -823,6 +892,30 @@ const styles = StyleSheet.create({
   },
   answerText: {
     fontSize: FontSize.md,
+  },
+  preferenceReviewSection: {
+    marginBottom: Spacing.md,
+  },
+  preferenceReviewTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    marginBottom: Spacing.sm,
+  },
+  preferenceReviewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: Spacing.xs,
+  },
+  preferenceReviewLabel: {
+    fontSize: FontSize.sm,
+    flex: 1,
+  },
+  preferenceReviewValue: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    flex: 1,
+    textAlign: 'right',
   },
   consentBox: {
     flexDirection: 'row',

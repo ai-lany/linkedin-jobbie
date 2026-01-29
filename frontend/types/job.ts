@@ -36,17 +36,27 @@ export interface Job {
   qualifications: string[];
   benefits: string[];
   aboutCompany: string;
+  questions?: string[]; // Job-specific application questions
 }
 
 export interface EasyApplyData {
   resume: string | null;
   phone: string;
   email: string;
-  additionalQuestions?: {
+  coverLetter?: string;
+  jobQuestions?: {
     question: string;
     answer: string;
   }[];
-  coverLetter?: string;
+  preferences?: {
+    workAuthorizationInCountry?: boolean;
+    needsVisa?: boolean;
+    ethnicity?: string;
+    veteran?: string;
+    disability?: string;
+    gender?: string;
+    willingToRelocate?: boolean;
+  };
 }
 
 export type SwipeDirection = 'left' | 'right' | 'up' | null;

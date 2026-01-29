@@ -107,7 +107,10 @@ export default function ApplicationsScreen() {
               {formatAppliedTime(appliedAt)}
             </Text>
           </View>
-          <TouchableOpacity style={styles.viewButton}>
+          <TouchableOpacity 
+            style={styles.viewButton}
+            onPress={() => setSelectedApplication(item)}
+          >
             <Text style={[styles.viewButtonText, { color: colors.primary }]}>View Details</Text>
             <Ionicons name="chevron-forward" size={16} color={colors.primary} />
           </TouchableOpacity>

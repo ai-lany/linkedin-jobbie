@@ -71,13 +71,13 @@ export default function LinkedInJobsTabScreen() {
 
   const handleJobbieClick = () => {
     setSelectedJob(null);
-    router.push('/(tabs)/index');
+    router.push('/(tabs)/');
   };
 
   const handleApplyButtonPress = () => {
     animateApplyButton();
     setTimeout(() => {
-      router.push('/(tabs)/index');
+      router.push('/(tabs)/');
     }, 150);
   };
 
@@ -149,13 +149,11 @@ export default function LinkedInJobsTabScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.divider }]}>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-          <View style={[styles.profilePic, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.profileText, { color: colors.textInverse }]}>
-              {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
-            </Text>
-          </View>
-        </TouchableOpacity>
+        <View style={[styles.profilePic, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.profileText, { color: colors.textInverse }]}>
+            {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+          </Text>
+        </View>
         <View style={[styles.searchBar, { backgroundColor: colors.cardBackground }]}>
           <Ionicons name="search" size={20} color={colors.textMuted} />
           <TextInput
@@ -197,7 +195,7 @@ export default function LinkedInJobsTabScreen() {
         {/* Jobbie Icon - Navigate to Swipe Page */}
         <TouchableOpacity
           style={[styles.jobbieIconButton, { backgroundColor: colors.primary }]}
-          onPress={() => router.push('/(tabs)/index')}
+          onPress={() => router.push('/(tabs)/')}
         >
           <Ionicons name="flame" size={24} color={colors.textInverse} />
         </TouchableOpacity>

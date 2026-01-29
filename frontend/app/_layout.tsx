@@ -54,17 +54,22 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log('Auth state:', { isAuthenticated, isLoading });
+    console.log('Auth state:', { isAuthenticated, isLoading, segments });
     if (isLoading) return; // Wait until auth state is loaded
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inLinkedInGroup = segments[0] === '(linkedin)';
+    const inTabsGroup = segments[0] === '(tabs)';
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to login if not authenticated
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to main app if authenticated
-      router.replace('/(tabs)');
+      // Redirect to LinkedIn mode if authenticated and in auth group
+      router.replace('/(linkedin)/home');
+    } else if (isAuthenticated && !inLinkedInGroup && !inTabsGroup && !inAuthGroup) {
+      // Redirect to LinkedIn mode if authenticated but not in any expected group
+      router.replace('/(linkedin)/home');
     }
   }, [isAuthenticated, isLoading, segments]);
 
@@ -87,6 +92,7 @@ function RootLayoutNav() {
           >
             <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
+            <Stack.Screen name="(linkedin)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           </Stack>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

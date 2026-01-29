@@ -7,20 +7,28 @@ interface HeaderProps {
   onProfilePress?: () => void;
   onSettingsPress?: () => void;
   onFilterPress?: () => void;
+  onBackPress?: () => void;
+  showBackButton?: boolean;
 }
 
-export default function Header({ onProfilePress, onSettingsPress, onFilterPress }: HeaderProps) {
+export default function Header({ onProfilePress, onSettingsPress, onFilterPress, onBackPress, showBackButton }: HeaderProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
   return (
     <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.divider }]}>
-      {/* Profile Button */}
-      <TouchableOpacity style={styles.iconButton} onPress={onProfilePress}>
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <Ionicons name="person" size={18} color={colors.textInverse} />
-        </View>
-      </TouchableOpacity>
+      {/* Back Button or Profile Button */}
+      {showBackButton ? (
+        <TouchableOpacity style={styles.iconButton} onPress={onBackPress}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity style={styles.iconButton} onPress={onProfilePress}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            <Ionicons name="person" size={18} color={colors.textInverse} />
+          </View>
+        </TouchableOpacity>
+      )}
 
       {/* Logo/Title */}
       <View style={styles.titleContainer}>

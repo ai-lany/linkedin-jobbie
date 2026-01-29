@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import Header from '../../components/Header';
 import SwipeableJobCard from '../../components/SwipeableJobCard';
 import ActionButtons from '../../components/ActionButtons';
@@ -22,6 +23,7 @@ import { Colors, Spacing, FontSize, FontWeight } from '../../constants/theme';
 export default function DiscoverScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const router = useRouter();
   const { currentUser, token } = useAuth();
 
   const {
@@ -125,7 +127,8 @@ export default function DiscoverScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
         <Header
-          onProfilePress={() => console.log('Profile pressed')}
+          showBackButton={true}
+          onBackPress={() => router.push('/(linkedin)/jobs')}
           onSettingsPress={() => console.log('Settings pressed')}
           onFilterPress={() => console.log('Filter pressed')}
         />

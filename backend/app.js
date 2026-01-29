@@ -21,6 +21,8 @@ const jobsRouter = require('./routes/api/jobs');
 const companiesRouter = require('./routes/api/companies');
 const jobApplicationsRouter = require('./routes/api/jobApplications');
 const resumesRouter = require('./routes/api/resumes');
+const publicJobsRouter = require('./routes/api/public/jobs');
+const publicApplicationsRouter = require('./routes/api/public/applications');
 
 const app = express();
 
@@ -38,7 +40,7 @@ if (!isProduction) {
     // development server (http://localhost:3000). (In production, the Express 
     // server will serve the React files statically.) 
     app.use(cors({
-        origin: ['http://localhost:8081', 'http://localhost:3000'],
+        origin: ['http://localhost:8081', 'http://localhost:3000', 'http://localhost:3001'],
         credentials: true
     }));
 }
@@ -55,6 +57,8 @@ app.use('/api/jobs', jobsRouter);
 app.use('/api/companies', companiesRouter);
 app.use('/api/applications', jobApplicationsRouter);
 app.use('/api/resumes', resumesRouter);
+app.use('/api/public/jobs', publicJobsRouter);
+app.use('/api/public/applications', publicApplicationsRouter);
 
 // Serve uploaded files statically
 app.use('/uploads', express.static('uploads'));

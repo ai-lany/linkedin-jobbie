@@ -21,6 +21,7 @@ const jobsRouter = require('./routes/api/jobs');
 const companiesRouter = require('./routes/api/companies');
 const jobApplicationsRouter = require('./routes/api/jobApplications');
 const resumesRouter = require('./routes/api/resumes');
+const workHistoryRouter = require('./routes/api/workHistory');
 const publicJobsRouter = require('./routes/api/public/jobs');
 const publicApplicationsRouter = require('./routes/api/public/applications');
 
@@ -57,6 +58,7 @@ app.use('/api/jobs', jobsRouter);
 app.use('/api/companies', companiesRouter);
 app.use('/api/applications', jobApplicationsRouter);
 app.use('/api/resumes', resumesRouter);
+app.use('/api/work-history', workHistoryRouter);
 app.use('/api/public/jobs', publicJobsRouter);
 app.use('/api/public/applications', publicApplicationsRouter);
 

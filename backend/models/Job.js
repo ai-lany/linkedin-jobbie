@@ -76,6 +76,11 @@ const jobSchema = new Schema({
     type: String,
     enum: ['Remote', 'Hybrid', 'Onsite'],
     required: false
+  },
+  applicationType: {
+    type: String,
+    enum: ['direct', 'external'],
+    default: 'direct'
   }
 }, {
   timestamps: true

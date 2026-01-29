@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Application Portal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div id="loading" class="loading">Loading job details...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="job-details" style="display: none;">
+            <div class="header">
+                <h1 id="job-title"></h1>
+                <div class="company-info">
+                    <h2 id="company-name"></h2>
+                    <p id="company-location"></p>
+                </div>
+            </div>
+
+            <div class="job-info">
+                <div class="info-row">
+                    <span class="label">Location:</span>
+                    <span id="job-location"></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Job Type:</span>
+                    <span id="job-type"></span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>About the Company</h3>
+                <p id="company-description"></p>
+                <div class="company-details">
+                    <div><strong>Industry:</strong> <span id="company-industry"></span></div>
+                    <div><strong>Company Size:</strong> <span id="company-size"></span></div>
+                    <div id="company-website-container">
+                        <strong>Website:</strong> <a id="company-website" href="" target="_blank"></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Job Description</h3>
+                <p id="job-description"></p>
+            </div>
+
+            <div class="section">
+                <h3>Apply for this Position</h3>
+                <form id="application-form">
+                    <div class="form-group">
+                        <label for="fullName">Full Name *</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="resume">Resume * (PDF, DOC, DOCX - Max 5MB)</label>
+                        <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required>
+                        <small class="file-info">Accepted formats: PDF, DOC, DOCX (Max 5MB)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="coverLetter">Cover Letter</label>
+                        <textarea id="coverLetter" name="coverLetter" rows="6" 
+                            placeholder="Tell us why you're a great fit for this role..."></textarea>
+                    </div>
+
+                    <div id="questions-container"></div>
+
+                    <button type="submit" class="submit-btn">Submit Application</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="success" style="display: none;" class="success-message">
+            <div class="success-icon">✓</div>
+            <h2>Application Submitted Successfully!</h2>
+            <p>Thank you for applying. We'll review your application and get back to you soon.</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

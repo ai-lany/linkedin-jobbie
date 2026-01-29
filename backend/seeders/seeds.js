@@ -323,6 +323,9 @@ for (let i = 0; i < NUM_SEED_JOBS; i++) {
   const title = faker.person.jobTitle();
   const jobType = jobTypes[Math.floor(Math.random() * jobTypes.length)];
   
+  // 30% of jobs are external (redirect to application portal)
+  const applicationType = Math.random() < 0.3 ? 'external' : 'direct';
+  
   jobs.push(
     new Job({
       company: company._id,
@@ -331,7 +334,8 @@ for (let i = 0; i < NUM_SEED_JOBS; i++) {
       location: `${faker.location.city()}, ${faker.location.state()}`,
       jobType: jobType,
       questions: jobQuestions,
-      postedBy: users[Math.floor(Math.random() * NUM_SEED_USERS)]._id
+      postedBy: users[Math.floor(Math.random() * NUM_SEED_USERS)]._id,
+      applicationType: applicationType
     })
   );
 }

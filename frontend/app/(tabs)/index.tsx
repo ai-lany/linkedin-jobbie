@@ -15,12 +15,14 @@ import ActionButtons from '../../components/ActionButtons';
 import ExpandedJobCard from '../../components/ExpandedJobCard';
 import EasyApplyModal from '../../components/EasyApplyModal';
 import { useJobs } from '../../context/JobContext';
+import { useAuth } from '../../context/AuthContext';
 import { Job, SwipeDirection, EasyApplyData } from '../../types/job';
 import { Colors, Spacing, FontSize, FontWeight } from '../../constants/theme';
 
 export default function DiscoverScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { currentUser, token } = useAuth();
 
   const {
     jobs,
@@ -214,6 +216,8 @@ export default function DiscoverScreen() {
           {applyingJob && (
             <EasyApplyModal
               job={applyingJob}
+              currentUser={currentUser}
+              token={token}
               onClose={() => setApplyingJob(null)}
               onSubmit={handleApplySubmit}
             />

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useJobs } from '../../context/JobContext';
-import ExpandedJobCard from '../../components/ExpandedJobCard';
+import ApplicationReviewModal from '../../components/ApplicationReviewModal';
 import { Job, EasyApplyData } from '../../types/job';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../../constants/theme';
 
@@ -28,7 +28,7 @@ export default function ApplicationsScreen() {
 
   const { appliedJobs } = useJobs();
 
-  const [expandedJob, setExpandedJob] = useState<Job | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<AppliedJob | null>(null);
 
   const formatAppliedTime = (dateString: string) => {
     const applied = new Date(dateString);
@@ -68,7 +68,7 @@ export default function ApplicationsScreen() {
     return (
       <TouchableOpacity
         style={[styles.applicationCard, { backgroundColor: colors.cardBackground }]}
-        onPress={() => setExpandedJob(job)}
+        onPress={() => setSelectedApplication(item)}
         activeOpacity={0.7}
       >
         <View style={styles.cardHeader}>
@@ -171,20 +171,19 @@ export default function ApplicationsScreen() {
         ListEmptyComponent={EmptyState}
       />
 
-      {/* Expanded Job Modal */}
+      {/* Application Review Modal */}
       <Modal
-        visible={expandedJob !== null}
+        visible={selectedApplication !== null}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setExpandedJob(null)}
+        onRequestClose={() => setSelectedApplication(null)}
       >
-        {expandedJob && (
-          <ExpandedJobCard
-            job={expandedJob}
-            onClose={() => setExpandedJob(null)}
-            onApply={() => setExpandedJob(null)}
-            onSkip={() => setExpandedJob(null)}
-            onSave={() => setExpandedJob(null)}
+        {selectedApplication && (
+          <ApplicationReviewModal
+            job={selectedApplication.job}
+            applicationData={selectedApplication.applicationData}
+            appliedAt={selectedApplication.appliedAt}
+            onClose={() => setSelectedApplication(null)}
           />
         )}
       </Modal>

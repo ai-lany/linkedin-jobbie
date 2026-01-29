@@ -3,3 +3,17 @@ frontend/node_modules
 frontend/.expo
 backend/node_modules
 backend/.env
+.DS_Store
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+*.pyo
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.venv/
+agent-service/.venv/

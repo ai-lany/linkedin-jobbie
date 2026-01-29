@@ -39,12 +39,45 @@ class ApplyServiceStub(object):
                 request_serializer=apply__service__pb2.ApplyRequest.SerializeToString,
                 response_deserializer=apply__service__pb2.ApplyResponse.FromString,
                 _registered_method=True)
+        self.GenerateCoverLetter = channel.unary_unary(
+                '/apply.ApplyService/GenerateCoverLetter',
+                request_serializer=apply__service__pb2.ApplyRequest.SerializeToString,
+                response_deserializer=apply__service__pb2.CoverLetterResponse.FromString,
+                _registered_method=True)
+        self.AnswerQuestions = channel.unary_unary(
+                '/apply.ApplyService/AnswerQuestions',
+                request_serializer=apply__service__pb2.AnswerRequest.SerializeToString,
+                response_deserializer=apply__service__pb2.AnswerResponse.FromString,
+                _registered_method=True)
+        self.AutoApply = channel.unary_unary(
+                '/apply.ApplyService/AutoApply',
+                request_serializer=apply__service__pb2.AutoApplyRequest.SerializeToString,
+                response_deserializer=apply__service__pb2.AutoApplyResponse.FromString,
+                _registered_method=True)
 
 
 class ApplyServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Apply(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GenerateCoverLetter(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AnswerQuestions(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AutoApply(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -57,6 +90,21 @@ def add_ApplyServiceServicer_to_server(servicer, server):
                     servicer.Apply,
                     request_deserializer=apply__service__pb2.ApplyRequest.FromString,
                     response_serializer=apply__service__pb2.ApplyResponse.SerializeToString,
+            ),
+            'GenerateCoverLetter': grpc.unary_unary_rpc_method_handler(
+                    servicer.GenerateCoverLetter,
+                    request_deserializer=apply__service__pb2.ApplyRequest.FromString,
+                    response_serializer=apply__service__pb2.CoverLetterResponse.SerializeToString,
+            ),
+            'AnswerQuestions': grpc.unary_unary_rpc_method_handler(
+                    servicer.AnswerQuestions,
+                    request_deserializer=apply__service__pb2.AnswerRequest.FromString,
+                    response_serializer=apply__service__pb2.AnswerResponse.SerializeToString,
+            ),
+            'AutoApply': grpc.unary_unary_rpc_method_handler(
+                    servicer.AutoApply,
+                    request_deserializer=apply__service__pb2.AutoApplyRequest.FromString,
+                    response_serializer=apply__service__pb2.AutoApplyResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,6 +134,87 @@ class ApplyService(object):
             '/apply.ApplyService/Apply',
             apply__service__pb2.ApplyRequest.SerializeToString,
             apply__service__pb2.ApplyResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GenerateCoverLetter(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/apply.ApplyService/GenerateCoverLetter',
+            apply__service__pb2.ApplyRequest.SerializeToString,
+            apply__service__pb2.CoverLetterResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AnswerQuestions(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/apply.ApplyService/AnswerQuestions',
+            apply__service__pb2.AnswerRequest.SerializeToString,
+            apply__service__pb2.AnswerResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AutoApply(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/apply.ApplyService/AutoApply',
+            apply__service__pb2.AutoApplyRequest.SerializeToString,
+            apply__service__pb2.AutoApplyResponse.FromString,
             options,
             channel_credentials,
             insecure,

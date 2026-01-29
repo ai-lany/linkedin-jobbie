@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
   Modal,
+  Platform,
   useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,15 +19,23 @@ import EasyApplyModal from '../../components/EasyApplyModal';
 import { Job, EasyApplyData } from '../../types/job';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../../constants/theme';
 
+const defaultBaseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:5001/api' : 'http://localhost:5001/api';
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL ?? defaultBaseUrl;
+
 export default function SavedScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const { currentUser, token } = useAuth();
+  const autoApplyEnabled = Boolean(currentUser?.additionalInfo?.autoApply);
 
   const { savedJobs, unsaveJob, applyToJob } = useJobs();
 
   const [expandedJob, setExpandedJob] = useState<Job | null>(null);
   const [applyingJob, setApplyingJob] = useState<Job | null>(null);
+
+  const canAutoApply = Boolean(
+    autoApplyEnabled && currentUser?.email && currentUser?.phoneNumber && currentUser?.resume && token
+  );
 
   const formatSavedTime = (dateString: string) => {
     const saved = new Date(dateString);
@@ -49,9 +58,62 @@ export default function SavedScreen() {
     return `${formatter.format(salary.min)} - ${formatter.format(salary.max)}`;
   };
 
-  const handleApply = (job: Job) => {
-    setApplyingJob(job);
-  };
+  const fetchCoverLetter = useCallback(
+    async (jobId: string) => {
+      if (!token) {
+        return '';
+      }
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/agent/cover-letter`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ jobId }),
+        });
+
+        if (!response.ok) {
+          return '';
+        }
+
+        const data = await response.json();
+        return data.coverLetter || '';
+      } catch (err) {
+        console.error('Cover letter generation failed:', err);
+        return '';
+      }
+    },
+    [token]
+  );
+
+  const handleAutoApply = useCallback(
+    async (job: Job) => {
+      if (!canAutoApply) {
+        setApplyingJob(job);
+        return;
+      }
+
+      const coverLetter = await fetchCoverLetter(job.id);
+      const applicationData: EasyApplyData = {
+        resume: currentUser?.resume ?? null,
+        phone: currentUser?.phoneNumber ?? '',
+        email: currentUser?.email ?? '',
+        additionalQuestions: [],
+        coverLetter,
+      };
+      applyToJob(job, applicationData);
+    },
+    [applyToJob, canAutoApply, currentUser?.email, currentUser?.phoneNumber, currentUser?.resume, fetchCoverLetter]
+  );
+
+  const handleApply = useCallback(
+    (job: Job) => {
+      void handleAutoApply(job);
+    },
+    [handleAutoApply]
+  );
 
   const handleApplySubmit = (data: EasyApplyData) => {
     if (applyingJob) {
@@ -137,8 +199,8 @@ export default function SavedScreen() {
       </View>
       <Text style={[styles.emptyTitle, { color: colors.text }]}>No saved jobs</Text>
       <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-        Swipe up on jobs you want to save for later. They'll appear here so you can apply when
-        you're ready.
+        Swipe up on jobs you want to save for later. They will appear here so you can apply when
+        you are ready.
       </Text>
     </View>
   );
@@ -180,7 +242,11 @@ export default function SavedScreen() {
             onApply={() => {
               const job = expandedJob;
               setExpandedJob(null);
-              setTimeout(() => setApplyingJob(job), 300);
+              setTimeout(() => {
+                if (job) {
+                  void handleAutoApply(job);
+                }
+              }, 300);
             }}
             onSkip={() => {
               const jobId = expandedJob.id;

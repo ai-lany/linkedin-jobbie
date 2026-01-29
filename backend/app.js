@@ -24,6 +24,7 @@ const resumesRouter = require('./routes/api/resumes');
 const workHistoryRouter = require('./routes/api/workHistory');
 const publicJobsRouter = require('./routes/api/public/jobs');
 const publicApplicationsRouter = require('./routes/api/public/applications');
+const agentRouter = require('./routes/api/agent');
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use('/api/resumes', resumesRouter);
 app.use('/api/work-history', workHistoryRouter);
 app.use('/api/public/jobs', publicJobsRouter);
 app.use('/api/public/applications', publicApplicationsRouter);
+app.use('/api/agent', agentRouter);
 
 // Serve uploaded files statically
 app.use('/uploads', express.static('uploads'));
@@ -72,9 +74,9 @@ app.use((req, res, next) => {
     err.statusCode = 404;
     next(err);
 });
-  
+
 const serverErrorLogger = debug('backend:error');
-  
+
 // Express custom error handler that will be called whenever a route handler or
 // middleware throws an error or invokes the `next` function with a truthy value
 app.use((err, req, res, next) => {
@@ -82,9 +84,9 @@ app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     res.status(statusCode);
     res.json({
-      message: err.message,
-      statusCode,
-      errors: err.errors
+        message: err.message,
+        statusCode,
+        errors: err.errors
     })
 });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -32,12 +32,25 @@ interface EasyApplyModalProps {
 
 type Step = 'contact' | 'resume' | 'questions' | 'preferences' | 'review';
 
+
 export default function EasyApplyModal({ job, currentUser, token, onClose, onSubmit }: EasyApplyModalProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const autoApplyEnabled = Boolean(currentUser?.additionalInfo?.autoApply);
+  const coverLetterRequestedRef = useRef<string | null>(null);
+  const questionsFetchedRef = useRef<string | null>(null);
+  const lastAutoStepRef = useRef<Step | null>(null);
+
+  // Dynamically determine steps based on whether job has questions
+  const hasQuestions = Boolean(job.questions && job.questions.length > 0);
+  const STEPS: Step[] = hasQuestions
+    ? ['contact', 'resume', 'questions', 'review']
+    : ['contact', 'resume', 'review'];
 
   const [currentStep, setCurrentStep] = useState<Step>('contact');
   const [isUploading, setIsUploading] = useState(false);
+  const [coverLetterLoading, setCoverLetterLoading] = useState(false);
+  const [questionsAnswered, setQuestionsAnswered] = useState(false);
 
   // Initialize form data with user info
   const [formData, setFormData] = useState<EasyApplyData>({
@@ -81,25 +94,25 @@ export default function EasyApplyModal({ job, currentUser, token, onClose, onSub
   const currentStepIndex = steps.indexOf(currentStep);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
-  const handleNext = () => {
-    const nextIndex = currentStepIndex + 1;
-    if (nextIndex < steps.length) {
-      setCurrentStep(steps[nextIndex]);
-    } else {
-      handleSubmit();
-    }
-  };
-
   const handleBack = () => {
     const prevIndex = currentStepIndex - 1;
     if (prevIndex >= 0) {
-      setCurrentStep(steps[prevIndex]);
+      setCurrentStep(STEPS[prevIndex]);
     }
   };
 
   const handleSubmit = () => {
     onSubmit(formData);
   };
+
+  const handleNext = useCallback(() => {
+    const nextIndex = currentStepIndex + 1;
+    if (nextIndex < STEPS.length) {
+      setCurrentStep(STEPS[nextIndex]);
+    } else {
+      handleSubmit();
+    }
+  }, [currentStepIndex, handleSubmit]);
 
   const handlePickDocument = async () => {
     try {
@@ -165,7 +178,7 @@ export default function EasyApplyModal({ job, currentUser, token, onClose, onSub
     }
   };
 
-  const isNextDisabled = () => {
+  const isNextDisabled = useCallback(() => {
     switch (currentStep) {
       case 'contact':
         return !formData.email || !formData.phone;
@@ -176,7 +189,169 @@ export default function EasyApplyModal({ job, currentUser, token, onClose, onSub
       default:
         return false;
     }
-  };
+  }, [currentStep, formData.email, formData.phone, formData.resume, formData.additionalQuestions, job.questions]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      email: prev.email || currentUser.email,
+      phone: prev.phone || currentUser.phoneNumber || '',
+      resume: prev.resume || currentUser.resume || null,
+    }));
+  }, [currentUser, job.id]);
+
+  useEffect(() => {
+    if (!autoApplyEnabled || !token) {
+      return;
+    }
+
+    if (coverLetterRequestedRef.current === job.id) {
+      return;
+    }
+
+    coverLetterRequestedRef.current = job.id;
+    const controller = new AbortController();
+
+    const fetchCoverLetter = async () => {
+      setCoverLetterLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/agent/cover-letter`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ jobId: job.id }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        if (data.coverLetter) {
+          setFormData((prev) => ({
+            ...prev,
+            coverLetter: data.coverLetter,
+          }));
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        console.error('Failed to generate cover letter:', err);
+      } finally {
+        setCoverLetterLoading(false);
+      }
+    };
+
+    fetchCoverLetter();
+
+    return () => controller.abort();
+  }, [autoApplyEnabled, job.id, token]);
+
+  useEffect(() => {
+    if (!autoApplyEnabled || !token) {
+      return;
+    }
+
+    if (!job.questions || job.questions.length === 0) {
+      setQuestionsAnswered(true);
+      return;
+    }
+
+    if (questionsFetchedRef.current === job.id) {
+      return;
+    }
+
+    questionsFetchedRef.current = job.id;
+    const controller = new AbortController();
+
+    const fetchAnswers = async () => {
+      try {
+        const response = await fetch(`${API_URL}/agent/answer-questions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            jobId: job.id,
+            questions: job.questions,
+          }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          setQuestionsAnswered(true);
+          return;
+        }
+
+        const data = await response.json();
+        if (data.answers && Array.isArray(data.answers)) {
+          setFormData((prev) => ({
+            ...prev,
+            additionalQuestions: data.answers,
+          }));
+        }
+        setQuestionsAnswered(true);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        console.error('Failed to generate answers:', err);
+        setQuestionsAnswered(true);
+      }
+    };
+
+    fetchAnswers();
+
+    return () => controller.abort();
+  }, [autoApplyEnabled, job.id, job.questions, token]);
+
+  useEffect(() => {
+    if (!autoApplyEnabled) {
+      return;
+    }
+
+    if (isNextDisabled()) {
+      return;
+    }
+
+    if (currentStep === 'review' && coverLetterLoading) {
+      return;
+    }
+
+    if (currentStep === 'questions' && !questionsAnswered) {
+      return;
+    }
+
+    if (lastAutoStepRef.current === currentStep) {
+      return;
+    }
+
+    lastAutoStepRef.current = currentStep;
+    const timeoutId = setTimeout(() => {
+      handleNext();
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    autoApplyEnabled,
+    currentStep,
+    coverLetterLoading,
+    questionsAnswered,
+    formData.email,
+    formData.phone,
+    formData.resume,
+    handleNext,
+    isNextDisabled,
+  ]);
 
   const getStepTitle = () => {
     switch (currentStep) {
@@ -270,7 +445,7 @@ export default function EasyApplyModal({ job, currentUser, token, onClose, onSub
               styles.resumeItem,
               { backgroundColor: colors.cardBackground, borderColor: colors.primary },
             ]}
-            onPress={() => {}}
+            onPress={() => { }}
           >
             <View style={styles.resumeIcon}>
               <Ionicons name="document-text" size={24} color={colors.primary} />
@@ -604,7 +779,7 @@ export default function EasyApplyModal({ job, currentUser, token, onClose, onSub
         <View style={styles.stepHeader}>
           <Text style={[styles.stepTitle, { color: colors.text }]}>{getStepTitle()}</Text>
           <Text style={[styles.stepCounter, { color: colors.textMuted }]}>
-            Step {currentStepIndex + 1} of {steps.length}
+            Step {currentStepIndex + 1} of {STEPS.length}
           </Text>
         </View>
 
@@ -964,5 +1139,18 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.bold,
+  },
+  aiHintBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.lg,
+  },
+  aiHintText: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    lineHeight: 18,
   },
 });

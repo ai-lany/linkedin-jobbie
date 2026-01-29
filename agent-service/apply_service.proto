@@ -23,6 +23,7 @@ message Profile {
   string headline = 3;
   string summary = 4;
   repeated string skills = 5;
+  string resume_text = 6;
 }
 
 message ApplyRequest {
@@ -38,4 +39,51 @@ message ApplyResponse {
 
 service ApplyService {
   rpc Apply(ApplyRequest) returns (ApplyResponse);
+  rpc GenerateCoverLetter(ApplyRequest) returns (CoverLetterResponse);
+  rpc AnswerQuestions(AnswerRequest) returns (AnswerResponse);
+  rpc AutoApply(AutoApplyRequest) returns (AutoApplyResponse);
+}
+
+message CoverLetterResponse {
+  bool success = 1;
+  string cover_letter = 2;
+  string message = 3;
+}
+
+message Question {
+  string question = 1;
+  string type = 2;  // "text", "boolean", "choice"
+  repeated string options = 3;  // for choice type
+}
+
+message AnswerRequest {
+  Job job = 1;
+  Profile profile = 2;
+  repeated Question questions = 3;
+}
+
+message Answer {
+  string question = 1;
+  string answer = 2;
+}
+
+message AnswerResponse {
+  bool success = 1;
+  repeated Answer answers = 2;
+  string message = 3;
+}
+
+message AutoApplyRequest {
+  Job job = 1;
+  Profile profile = 2;
+  repeated Question questions = 3;  // Optional
+}
+
+message AutoApplyResponse {
+  bool success = 1;
+  string message = 2;
+  string refined_resume = 3;
+  string cover_letter = 4;
+  repeated Answer answers = 5;
+  string application_id = 6;
 }

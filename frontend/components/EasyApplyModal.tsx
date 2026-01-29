@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,33 +11,73 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Job, EasyApplyData } from '../types/job';
+import { User } from '../types/auth';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../constants/theme';
+import * as DocumentPicker from 'expo-document-picker';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001/api';
 
 interface EasyApplyModalProps {
   job: Job;
+  currentUser: User | null;
+  token: string | null;
   onClose: () => void;
   onSubmit: (data: EasyApplyData) => void;
 }
 
-type Step = 'contact' | 'resume' | 'questions' | 'review';
+type Step = 'contact' | 'resume' | 'questions' | 'preferences' | 'review';
 
-export default function EasyApplyModal({ job, onClose, onSubmit }: EasyApplyModalProps) {
+export default function EasyApplyModal({ job, currentUser, token, onClose, onSubmit }: EasyApplyModalProps) {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
   const [currentStep, setCurrentStep] = useState<Step>('contact');
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Initialize form data with user info
   const [formData, setFormData] = useState<EasyApplyData>({
-    resume: null,
-    phone: '',
-    email: '',
-    additionalQuestions: [],
+    resume: currentUser?.resume || null,
+    phone: currentUser?.phoneNumber || '',
+    email: currentUser?.email || '',
     coverLetter: '',
+    jobQuestions: [],
+    preferences: {
+      workAuthorizationInCountry: currentUser?.additionalInfo?.workAuthorizationInCountry || false,
+      needsVisa: currentUser?.additionalInfo?.needsVisa || false,
+      ethnicity: currentUser?.additionalInfo?.ethnicity || 'Prefer not to say',
+      veteran: currentUser?.additionalInfo?.veteran || 'Prefer not to say',
+      disability: currentUser?.additionalInfo?.disability || 'Prefer not to say',
+      gender: currentUser?.additionalInfo?.gender || 'Prefer not to say',
+      willingToRelocate: currentUser?.additionalInfo?.willingToRelocate || false,
+    },
   });
 
-  const steps: Step[] = ['contact', 'resume', 'review'];
+  // Initialize job questions
+  useEffect(() => {
+    if (job.questions && job.questions.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        jobQuestions: job.questions!.map(q => ({ question: q, answer: '' })),
+      }));
+    }
+  }, [job.questions]);
+
+  // Calculate steps based on whether job has questions
+  const getSteps = (): Step[] => {
+    const baseSteps: Step[] = ['contact', 'resume'];
+    if (job.questions && job.questions.length > 0) {
+      baseSteps.push('questions');
+    }
+    baseSteps.push('preferences', 'review');
+    return baseSteps;
+  };
+
+  const steps = getSteps();
   const currentStepIndex = steps.indexOf(currentStep);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
@@ -61,12 +101,78 @@ export default function EasyApplyModal({ job, onClose, onSubmit }: EasyApplyModa
     onSubmit(formData);
   };
 
+  const handlePickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      if (result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+
+        // Check file size (5MB limit)
+        if (file.size && file.size > 5 * 1024 * 1024) {
+          Alert.alert('Error', 'File size must be less than 5MB');
+          return;
+        }
+
+        await uploadResume(file);
+      }
+    } catch (err) {
+      console.error('Error picking document:', err);
+      Alert.alert('Error', 'Failed to pick document. Please try again.');
+    }
+  };
+
+  const uploadResume = async (file: any) => {
+    setIsUploading(true);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('resume', {
+        uri: file.uri,
+        type: file.mimeType || 'application/pdf',
+        name: file.name,
+      } as any);
+
+      const response = await fetch(`${API_URL}/resumes/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataUpload,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload resume');
+      }
+
+      // Update form with new resume path
+      setFormData({ ...formData, resume: data.resumePath });
+      Alert.alert('Success', 'Resume uploaded successfully!');
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      Alert.alert('Error', err.message || 'Failed to upload resume. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const isNextDisabled = () => {
     switch (currentStep) {
       case 'contact':
         return !formData.email || !formData.phone;
       case 'resume':
         return !formData.resume;
+      case 'questions':
+        return formData.jobQuestions?.some(q => !q.answer.trim()) || false;
       default:
         return false;
     }
@@ -78,11 +184,21 @@ export default function EasyApplyModal({ job, onClose, onSubmit }: EasyApplyModa
         return 'Contact Info';
       case 'resume':
         return 'Resume';
+      case 'questions':
+        return 'Additional Questions';
+      case 'preferences':
+        return 'Preferences & EEO';
       case 'review':
         return 'Review Application';
       default:
         return '';
     }
+  };
+
+  const getFileName = (path: string) => {
+    if (!path) return '';
+    const parts = path.split('/');
+    return parts[parts.length - 1];
   };
 
   const renderContactStep = () => (
@@ -143,48 +259,167 @@ export default function EasyApplyModal({ job, onClose, onSubmit }: EasyApplyModa
   const renderResumeStep = () => (
     <View style={styles.stepContent}>
       <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
-        Upload your resume or select a saved one
+        {formData.resume ? 'Your current resume or upload a new one' : 'Upload your resume'}
       </Text>
 
-      {/* Mock saved resumes */}
-      <View style={styles.resumeList}>
-        {['My_Resume_2024.pdf', 'Tech_Resume.pdf'].map((resume, index) => (
+      {/* Current Resume */}
+      {formData.resume && (
+        <View style={styles.resumeList}>
           <TouchableOpacity
-            key={index}
             style={[
               styles.resumeItem,
-              { backgroundColor: colors.cardBackground, borderColor: formData.resume === resume ? colors.primary : colors.border },
+              { backgroundColor: colors.cardBackground, borderColor: colors.primary },
             ]}
-            onPress={() => setFormData({ ...formData, resume })}
+            onPress={() => {}}
           >
             <View style={styles.resumeIcon}>
-              <Ionicons
-                name="document-text"
-                size={24}
-                color={formData.resume === resume ? colors.primary : colors.textMuted}
-              />
+              <Ionicons name="document-text" size={24} color={colors.primary} />
             </View>
             <View style={styles.resumeInfo}>
-              <Text style={[styles.resumeName, { color: colors.text }]}>{resume}</Text>
+              <Text style={[styles.resumeName, { color: colors.text }]}>
+                {getFileName(formData.resume)}
+              </Text>
               <Text style={[styles.resumeMeta, { color: colors.textMuted }]}>
-                Last updated: Jan 2024
+                Current resume
               </Text>
             </View>
-            {formData.resume === resume && (
-              <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
-            )}
+            <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
           </TouchableOpacity>
-        ))}
-      </View>
+        </View>
+      )}
 
       {/* Upload new */}
       <TouchableOpacity
         style={[styles.uploadButton, { borderColor: colors.primary }]}
-        onPress={() => setFormData({ ...formData, resume: 'New_Upload.pdf' })}
+        onPress={handlePickDocument}
+        disabled={isUploading}
       >
-        <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
-        <Text style={[styles.uploadText, { color: colors.primary }]}>Upload New Resume</Text>
+        {isUploading ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <>
+            <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
+            <Text style={[styles.uploadText, { color: colors.primary }]}>
+              {formData.resume ? 'Upload New Resume' : 'Upload Resume'}
+            </Text>
+          </>
+        )}
       </TouchableOpacity>
+    </View>
+  );
+
+  const renderQuestionsStep = () => (
+    <View style={styles.stepContent}>
+      <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
+        Please answer the following questions
+      </Text>
+
+      {formData.jobQuestions?.map((item, index) => (
+        <View key={index} style={styles.inputGroup}>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>
+            {index + 1}. {item.question}
+          </Text>
+          <View style={[styles.textAreaContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <TextInput
+              style={[styles.textArea, { color: colors.text }]}
+              placeholder="Your answer..."
+              placeholderTextColor={colors.textMuted}
+              value={item.answer}
+              onChangeText={(text) => {
+                const updated = [...(formData.jobQuestions || [])];
+                updated[index].answer = text;
+                setFormData({ ...formData, jobQuestions: updated });
+              }}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+
+  const renderPreferencesStep = () => (
+    <View style={styles.stepContent}>
+      <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
+        Help us match you better. All fields are optional.
+      </Text>
+
+      {/* Work Authorization */}
+      <View style={[styles.preferenceSection, { borderBottomColor: colors.divider }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Work Authorization</Text>
+
+        <View style={styles.preferenceRow}>
+          <Text style={[styles.preferenceLabel, { color: colors.text }]}>
+            Authorized to work in country?
+          </Text>
+          <Text style={[styles.preferenceValue, { color: colors.textSecondary }]}>
+            {formData.preferences?.workAuthorizationInCountry ? 'Yes' : 'No'}
+          </Text>
+        </View>
+
+        <View style={styles.preferenceRow}>
+          <Text style={[styles.preferenceLabel, { color: colors.text }]}>
+            Need visa sponsorship?
+          </Text>
+          <Text style={[styles.preferenceValue, { color: colors.textSecondary }]}>
+            {formData.preferences?.needsVisa ? 'Yes' : 'No'}
+          </Text>
+        </View>
+
+        <View style={styles.preferenceRow}>
+          <Text style={[styles.preferenceLabel, { color: colors.text }]}>
+            Willing to relocate?
+          </Text>
+          <Text style={[styles.preferenceValue, { color: colors.textSecondary }]}>
+            {formData.preferences?.willingToRelocate ? 'Yes' : 'No'}
+          </Text>
+        </View>
+      </View>
+
+      {/* EEO Information */}
+      <View style={styles.preferenceSection}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Equal Opportunity (Optional)</Text>
+        <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+          This information helps employers track diversity metrics
+        </Text>
+
+        <View style={styles.preferenceRow}>
+          <Text style={[styles.preferenceLabel, { color: colors.text }]}>Gender</Text>
+          <Text style={[styles.preferenceValue, { color: colors.textSecondary }]}>
+            {formData.preferences?.gender}
+          </Text>
+        </View>
+
+        <View style={styles.preferenceRow}>
+          <Text style={[styles.preferenceLabel, { color: colors.text }]}>Ethnicity</Text>
+          <Text style={[styles.preferenceValue, { color: colors.textSecondary }]}>
+            {formData.preferences?.ethnicity}
+          </Text>
+        </View>
+
+        <View style={styles.preferenceRow}>
+          <Text style={[styles.preferenceLabel, { color: colors.text }]}>Veteran Status</Text>
+          <Text style={[styles.preferenceValue, { color: colors.textSecondary }]} numberOfLines={2}>
+            {formData.preferences?.veteran}
+          </Text>
+        </View>
+
+        <View style={styles.preferenceRow}>
+          <Text style={[styles.preferenceLabel, { color: colors.text }]}>Disability Status</Text>
+          <Text style={[styles.preferenceValue, { color: colors.textSecondary }]} numberOfLines={2}>
+            {formData.preferences?.disability}
+          </Text>
+        </View>
+      </View>
+
+      <View style={[styles.infoBox, { backgroundColor: colors.primary + '15' }]}>
+        <Ionicons name="information-circle" size={20} color={colors.primary} />
+        <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+          You can update these preferences anytime in your profile settings
+        </Text>
+      </View>
     </View>
   );
 
@@ -231,7 +466,9 @@ export default function EasyApplyModal({ job, onClose, onSubmit }: EasyApplyModa
 
         <View style={styles.reviewItem}>
           <Ionicons name="document-text" size={18} color={colors.textMuted} />
-          <Text style={[styles.reviewValue, { color: colors.text }]}>{formData.resume}</Text>
+          <Text style={[styles.reviewValue, { color: colors.text }]}>
+            {formData.resume ? getFileName(formData.resume) : 'No resume'}
+          </Text>
         </View>
 
         {formData.coverLetter && (
@@ -243,6 +480,90 @@ export default function EasyApplyModal({ job, onClose, onSubmit }: EasyApplyModa
           </View>
         )}
       </View>
+
+      {/* Questions Answers */}
+      {formData.jobQuestions && formData.jobQuestions.length > 0 && (
+        <View style={[styles.reviewCard, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.reviewSectionTitle, { color: colors.text }]}>Your Answers</Text>
+          {formData.jobQuestions.map((item, index) => (
+            <View key={index} style={styles.questionReview}>
+              <Text style={[styles.questionText, { color: colors.textSecondary }]}>
+                {index + 1}. {item.question}
+              </Text>
+              <Text style={[styles.answerText, { color: colors.text }]}>{item.answer}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Preferences & EEO */}
+      {formData.preferences && (
+        <View style={[styles.reviewCard, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.reviewSectionTitle, { color: colors.text }]}>Preferences & EEO</Text>
+
+          {/* Work Authorization */}
+          <View style={styles.preferenceReviewSection}>
+            <Text style={[styles.preferenceReviewTitle, { color: colors.textSecondary }]}>
+              Work Authorization
+            </Text>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>
+                Authorized to work in country?
+              </Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.workAuthorizationInCountry ? 'Yes' : 'No'}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>
+                Need visa sponsorship?
+              </Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.needsVisa ? 'Yes' : 'No'}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>
+                Willing to relocate?
+              </Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.willingToRelocate ? 'Yes' : 'No'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Equal Opportunity */}
+          <View style={styles.preferenceReviewSection}>
+            <Text style={[styles.preferenceReviewTitle, { color: colors.textSecondary }]}>
+              Equal Opportunity
+            </Text>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>Gender</Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.gender}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>Ethnicity</Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]}>
+                {formData.preferences.ethnicity}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>Veteran Status</Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]} numberOfLines={2}>
+                {formData.preferences.veteran}
+              </Text>
+            </View>
+            <View style={styles.preferenceReviewRow}>
+              <Text style={[styles.preferenceReviewLabel, { color: colors.text }]}>Disability Status</Text>
+              <Text style={[styles.preferenceReviewValue, { color: colors.textSecondary }]} numberOfLines={2}>
+                {formData.preferences.disability}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Consent */}
       <View style={[styles.consentBox, { backgroundColor: colors.primaryLight }]}>
@@ -291,6 +612,8 @@ export default function EasyApplyModal({ job, onClose, onSubmit }: EasyApplyModa
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {currentStep === 'contact' && renderContactStep()}
           {currentStep === 'resume' && renderResumeStep()}
+          {currentStep === 'questions' && renderQuestionsStep()}
+          {currentStep === 'preferences' && renderPreferencesStep()}
           {currentStep === 'review' && renderReviewStep()}
         </ScrollView>
 
@@ -421,7 +744,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     fontSize: FontSize.md,
-    minHeight: 100,
+    minHeight: 80,
   },
   resumeList: {
     gap: Spacing.md,
@@ -465,6 +788,47 @@ const styles = StyleSheet.create({
   uploadText: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
+  },
+  preferenceSection: {
+    marginBottom: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+  },
+  sectionTitle: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semibold,
+    marginBottom: Spacing.xs,
+  },
+  sectionSubtitle: {
+    fontSize: FontSize.xs,
+    marginBottom: Spacing.md,
+  },
+  preferenceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  preferenceLabel: {
+    fontSize: FontSize.sm,
+    flex: 1,
+  },
+  preferenceValue: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    flex: 1,
+    textAlign: 'right',
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: FontSize.sm,
   },
   reviewCard: {
     padding: Spacing.md,
@@ -518,6 +882,40 @@ const styles = StyleSheet.create({
   reviewValue: {
     fontSize: FontSize.md,
     flex: 1,
+  },
+  questionReview: {
+    marginBottom: Spacing.md,
+  },
+  questionText: {
+    fontSize: FontSize.sm,
+    marginBottom: Spacing.xs,
+  },
+  answerText: {
+    fontSize: FontSize.md,
+  },
+  preferenceReviewSection: {
+    marginBottom: Spacing.md,
+  },
+  preferenceReviewTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    marginBottom: Spacing.sm,
+  },
+  preferenceReviewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: Spacing.xs,
+  },
+  preferenceReviewLabel: {
+    fontSize: FontSize.sm,
+    flex: 1,
+  },
+  preferenceReviewValue: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    flex: 1,
+    textAlign: 'right',
   },
   consentBox: {
     flexDirection: 'row',

@@ -125,6 +125,7 @@ function transformBackendJob(id: string, backendJob: any): Job {
     qualifications: [], // Could parse from description in the future
     benefits: [], // Backend doesn't have benefits data
     aboutCompany: companyData.description || `Posted by ${backendJob.postedBy?.username || 'Unknown'}`,
+    questions: backendJob.questions || [], // Include questions from backend
   };
 }
 
@@ -165,6 +166,14 @@ export function JobProvider({ children }: { children: ReactNode }) {
     });
     // Remove from saved if it was saved
     setSavedJobs((prev) => prev.filter((s) => s.job.id !== job.id));
+    // Remove from swipe history since applied jobs can't be undone
+    setSwipeHistory((prev) => {
+      const lastSwipe = prev[prev.length - 1];
+      if (lastSwipe && lastSwipe.job.id === job.id) {
+        return prev.slice(0, -1);
+      }
+      return prev;
+    });
   }, []);
 
   const isJobApplied = useCallback(

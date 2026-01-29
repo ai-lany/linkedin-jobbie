@@ -48,6 +48,7 @@ export interface AuthContextType {
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => Promise<void>;
   clearError: () => void;
+  refreshUser: () => Promise<boolean>;
   updateUserPreferences: (preferences: Partial<User['additionalInfo']>) => Promise<boolean>;
   isAuthenticated: boolean;
 }

@@ -15,12 +15,14 @@ import ActionButtons from '../../components/ActionButtons';
 import ExpandedJobCard from '../../components/ExpandedJobCard';
 import EasyApplyModal from '../../components/EasyApplyModal';
 import { useJobs } from '../../context/JobContext';
+import { useAuth } from '../../context/AuthContext';
 import { Job, SwipeDirection, EasyApplyData } from '../../types/job';
 import { Colors, Spacing, FontSize, FontWeight } from '../../constants/theme';
 
 export default function DiscoverScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { currentUser, token } = useAuth();
 
   const {
     jobs,
@@ -111,6 +113,12 @@ export default function DiscoverScreen() {
     },
     [applyingJob, applyToJob]
   );
+
+  // Handle modal close without submitting - bring the job back
+  const handleApplyClose = useCallback(() => {
+    setApplyingJob(null);
+    handleUndo(); // Undo the swipe to bring the job card back
+  }, [handleUndo]);
 
   return (
     <GestureHandlerRootView style={styles.gestureRoot}>
@@ -214,7 +222,9 @@ export default function DiscoverScreen() {
           {applyingJob && (
             <EasyApplyModal
               job={applyingJob}
-              onClose={() => setApplyingJob(null)}
+              currentUser={currentUser}
+              token={token}
+              onClose={handleApplyClose}
               onSubmit={handleApplySubmit}
             />
           )}

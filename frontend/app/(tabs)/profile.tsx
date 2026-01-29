@@ -23,7 +23,8 @@ export default function ProfileScreen() {
   const { currentUser, logout } = useAuth();
 
   const menuItems = [
-    { icon: 'document-text-outline', label: 'My Resumes', count: 2 },
+    { icon: 'document-text-outline', label: 'My Resumes', count: currentUser?.resume ? 1 : 0 },
+    { icon: 'briefcase-outline', label: 'Work Experience', count: currentUser?.workHistory?.length || 0 },
     { icon: 'settings-outline', label: 'Job Preferences', count: null },
     { icon: 'notifications-outline', label: 'Notifications', count: 3 },
     { icon: 'shield-checkmark-outline', label: 'Privacy', count: null },
@@ -107,6 +108,10 @@ export default function ProfileScreen() {
               onPress={() => {
                 if (item.label === 'Job Preferences') {
                   router.push('/(tabs)/preferences');
+                } else if (item.label === 'My Resumes') {
+                  router.push('/(tabs)/resumes');
+                } else if (item.label === 'Work Experience') {
+                  router.push('/(tabs)/work-experience');
                 }
               }}
             >

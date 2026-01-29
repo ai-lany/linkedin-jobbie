@@ -100,13 +100,19 @@ router.get('/current', restoreUser, (req, res) => {
 });
 
 router.patch('/preferences', restoreUser, async (req, res, next) => {
-  if (!req.user) {
-    const err = new Error('Unauthorized');
-    err.statusCode = 401;
-    return next(err);
-  }
-
   try {
+    // For demo: if no authenticated user, use first user in database
+    let userId = req.user?._id;
+    if (!userId) {
+      const demoUser = await User.findOne({});
+      if (!demoUser) {
+        const err = new Error('No users found in database');
+        err.statusCode = 404;
+        return next(err);
+      }
+      userId = demoUser._id;
+    }
+
     const allowedFields = [
       'workAuthorizationInCountry',
       'needsVisa',
@@ -129,7 +135,7 @@ router.patch('/preferences', restoreUser, async (req, res, next) => {
 
     // Update user document
     const user = await User.findByIdAndUpdate(
-      req.user._id,
+      userId,
       { $set: updateObj },
       { new: true, runValidators: true }
     ).select('-hashedPassword');

@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useJobs } from '../../context/JobContext';
 import { useAuth } from '../../context/AuthContext';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../../constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -44,6 +45,28 @@ export default function ProfileScreen() {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
+            await logout();
+            router.replace('/(auth)/login');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleClearSession = () => {
+    Alert.alert(
+      'Clear Session',
+      'This will remove all local session data and return you to the login screen.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.clear();
             await logout();
             router.replace('/(auth)/login');
           },
@@ -140,6 +163,15 @@ export default function ProfileScreen() {
         >
           <Ionicons name="log-out-outline" size={22} color={colors.error} />
           <Text style={[styles.signOutText, { color: colors.error }]}>Sign Out</Text>
+        </TouchableOpacity>
+
+        {/* Clear Session */}
+        <TouchableOpacity
+          style={[styles.signOutButton, { backgroundColor: colors.cardBackground }]}
+          onPress={handleClearSession}
+        >
+          <Ionicons name="trash-outline" size={22} color={colors.warning} />
+          <Text style={[styles.signOutText, { color: colors.warning }]}>Clear Session</Text>
         </TouchableOpacity>
 
         {/* App Version */}

@@ -36,7 +36,7 @@ export interface Job {
   qualifications: string[];
   benefits: string[];
   aboutCompany: string;
-  questions?: string[]; // Job-specific application questions
+  questions?: string[];
 }
 
 export interface EasyApplyData {
@@ -44,6 +44,10 @@ export interface EasyApplyData {
   phone: string;
   email: string;
   coverLetter?: string;
+  additionalQuestions?: {
+    question: string;
+    answer: string;
+  }[];
   jobQuestions?: {
     question: string;
     answer: string;

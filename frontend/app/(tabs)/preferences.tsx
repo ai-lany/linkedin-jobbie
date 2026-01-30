@@ -325,45 +325,6 @@ export default function PreferencesScreen() {
           </View>
         </View>
 
-        {/* Application Settings Section */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Application Settings</Text>
-
-          <View style={[styles.switchRow, { borderBottomColor: colors.divider }]}>
-            <View style={styles.switchTextContainer}>
-              <Text style={[styles.switchLabel, { color: colors.text }]}>
-                Enable automatic resume tailoring
-              </Text>
-              <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>
-                Customize your resume for each job
-              </Text>
-            </View>
-            <Switch
-              value={preferences.resumeTailoring}
-              onValueChange={(value) => setPreferences({ ...preferences, resumeTailoring: value })}
-              trackColor={{ false: colors.divider, true: colors.primary + '80' }}
-              thumbColor={preferences.resumeTailoring ? colors.primary : colors.textSecondary}
-            />
-          </View>
-
-          <View style={styles.switchRow}>
-            <View style={styles.switchTextContainer}>
-              <Text style={[styles.switchLabel, { color: colors.text }]}>
-                Enable auto-apply to matching jobs
-              </Text>
-              <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>
-                Automatically apply to jobs that match your criteria
-              </Text>
-            </View>
-            <Switch
-              value={preferences.autoApply}
-              onValueChange={(value) => setPreferences({ ...preferences, autoApply: value })}
-              trackColor={{ false: colors.divider, true: colors.primary + '80' }}
-              thumbColor={preferences.autoApply ? colors.primary : colors.textSecondary}
-            />
-          </View>
-        </View>
-
         {/* Equal Opportunity Section */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Equal Opportunity (Optional)</Text>

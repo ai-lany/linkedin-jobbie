@@ -21,6 +21,22 @@ import LinkedInJobDetailModal from '../../components/LinkedInJobDetailModal';
 import { Job } from '../../types/job';
 import { Colors, Spacing, BorderRadius, FontSize, FontWeight } from '../../constants/theme';
 
+// Fallback AppModeContext hook: provides a no-op switchToJobbie until a proper AppModeContext module exists.
+// Remove this stub and restore the original import when ../../context/AppModeContext is added.
+type AppModeHook = {
+  switchToJobbie: (job: Job) => void;
+};
+const useAppMode = (): AppModeHook => {
+  return {
+    switchToJobbie: (job: Job) => {
+      // noop fallback to avoid runtime errors during development
+      // You can add logging to help detect usage of the stub during development
+      // and replace this implementation with the real context provider.
+      console.warn('useAppMode (fallback): switchToJobbie called', job?.id ?? job);
+    },
+  };
+};
+
 export default function LinkedInJobsTabScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -126,13 +142,13 @@ export default function LinkedInJobsTabScreen() {
                 </Text>
               </View>
               {item.easyApply && (
-              <View style={[styles.easyApplyRow, { marginLeft: 6 }]}>
-                <Image
-                source={require('../../assets/images/linkedin_logo.png')}
-                style={{ width: 12, height: 12, resizeMode: 'contain' }}
-                />
-                <Text style={[styles.easyApplyText, { color: colors.primary }]}>Easy Apply</Text>
-              </View>
+                <View style={[styles.easyApplyRow, { marginLeft: 6 }]}>
+                  <Image
+                    source={require('../../assets/images/linkedin_logo.png')}
+                    style={{ width: 12, height: 12, resizeMode: 'contain' }}
+                  />
+                  <Text style={[styles.easyApplyText, { color: colors.primary }]}>Easy Apply</Text>
+                </View>
               )}
             </View>
           </View>

@@ -251,7 +251,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       }
 
       // Update currentUser with new data
-      setCurrentUser({
+      const updatedUser = {
         id: data.user._id,
         username: data.user.username,
         email: data.user.email,
@@ -259,7 +259,11 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         resume: data.user.resume,
         workHistory: data.user.workHistory,
         additionalInfo: data.user.additionalInfo,
-      });
+      };
+      setCurrentUser(updatedUser);
+
+      // Update AsyncStorage cache with new user data
+      await AsyncStorage.setItem('currentUser', JSON.stringify(updatedUser));
 
       setIsLoading(false);
       return true;

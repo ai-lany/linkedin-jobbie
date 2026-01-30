@@ -41,6 +41,7 @@ export interface Job {
 
 export interface EasyApplyData {
   resume: string | null;
+  refinedResume?: string; // AI-tailored resume content from agent
   phone: string;
   email: string;
   coverLetter?: string;

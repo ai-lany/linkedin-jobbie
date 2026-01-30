@@ -33,6 +33,9 @@ const jobApplicationSchema = new Schema({
   resume: {
     type: String
   },
+  refinedResume: {
+    type: String
+  },
   phone: {
     type: String
   },

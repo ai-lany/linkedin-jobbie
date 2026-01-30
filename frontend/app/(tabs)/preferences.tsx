@@ -191,6 +191,46 @@ export default function PreferencesScreen() {
           </Text>
         </View>
 
+        {/* AI Features Section */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>AI-Powered Features</Text>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
+            Let our AI agent help you apply to jobs faster with intelligent automation.
+          </Text>
+
+          {/* Auto-Apply Toggle */}
+          <View style={[styles.switchRow, { borderBottomColor: colors.divider }]}>
+            <View style={styles.switchTextContainer}>
+              <Text style={[styles.switchLabel, { color: colors.text }]}>Enable Auto-Apply</Text>
+              <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>
+                Automatically apply to jobs when you swipe right. Our AI will tailor your resume, write a cover letter, and answer questions for you.
+              </Text>
+            </View>
+            <Switch
+              value={preferences.autoApply}
+              onValueChange={(value) => setPreferences({ ...preferences, autoApply: value })}
+              trackColor={{ false: colors.divider, true: colors.primary }}
+              thumbColor={preferences.autoApply ? '#fff' : '#f4f3f4'}
+            />
+          </View>
+
+          {/* Resume Tailoring Toggle */}
+          <View style={styles.switchRow}>
+            <View style={styles.switchTextContainer}>
+              <Text style={[styles.switchLabel, { color: colors.text }]}>AI Resume Tailoring</Text>
+              <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>
+                Automatically customize your resume for each job application to highlight relevant experience.
+              </Text>
+            </View>
+            <Switch
+              value={preferences.resumeTailoring}
+              onValueChange={(value) => setPreferences({ ...preferences, resumeTailoring: value })}
+              trackColor={{ false: colors.divider, true: colors.primary }}
+              thumbColor={preferences.resumeTailoring ? '#fff' : '#f4f3f4'}
+            />
+          </View>
+        </View>
+
         {/* Work Authorization Section */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Work Authorization</Text>

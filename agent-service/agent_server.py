@@ -9,6 +9,7 @@ from chains.cover_letter_chain import run_cover_letter_chain
 from chains.question_answering_chain import run_question_answering_chain
 from chains.resume_chain import run_resume_chain
 from chains.orchestrator_chain import run_orchestrator_chain
+from chains.agentic_orchestrator import run_agentic_orchestrator
 
 
 class ApplyService(apply_service_pb2_grpc.ApplyServiceServicer):
@@ -84,14 +85,14 @@ class ApplyService(apply_service_pb2_grpc.ApplyServiceServicer):
 
         print(f"[AUTO_APPLY] Converted {len(questions) if questions else 0} questions", flush=True)
 
-        # Run orchestrator
-        print("[AUTO_APPLY] Starting orchestrator chain...", flush=True)
-        result = run_orchestrator_chain(
+        # Run agentic orchestrator
+        print("[AUTO_APPLY] Starting agentic orchestrator...", flush=True)
+        result = run_agentic_orchestrator(
             job_obj=request.job,
             profile_obj=request.profile,
             questions=questions
         )
-        print(f"[AUTO_APPLY] Orchestrator completed with success={result['success']}", flush=True)
+        print(f"[AUTO_APPLY] Agentic orchestrator completed with success={result['success']}", flush=True)
 
         # Generate application ID
         application_id = f"app-{int(time.time() * 1000)}"

@@ -172,6 +172,27 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
         success: true,
         applicationId: existingApplication._id.toString(),
         message: 'Application already submitted',
+        application: {
+          coverLetter: existingApplication.coverLetter || '',
+          refinedResume: existingApplication.refinedResume || '',
+          jobQuestions: Array.isArray(existingApplication.responses)
+            ? existingApplication.responses.map((response) => ({
+              question: response.question,
+              answer: response.answer
+            }))
+            : [],
+          phone: existingApplication.phone || req.user.phoneNumber || '',
+          email: existingApplication.email || req.user.email || '',
+          preferences: existingApplication.preferences || {
+            workAuthorizationInCountry: req.user.additionalInfo?.workAuthorizationInCountry || false,
+            needsVisa: req.user.additionalInfo?.needsVisa || false,
+            ethnicity: req.user.additionalInfo?.ethnicity || 'Prefer not to say',
+            veteran: req.user.additionalInfo?.veteran || 'Prefer not to say',
+            disability: req.user.additionalInfo?.disability || 'Prefer not to say',
+            gender: req.user.additionalInfo?.gender || 'Prefer not to say',
+            willingToRelocate: req.user.additionalInfo?.willingToRelocate || false
+          }
+        }
       });
     }
 
@@ -219,8 +240,8 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
     // Build responses array from answers
     const responses = Array.isArray(agentResponse.answers)
       ? agentResponse.answers.map(a => ({
-      question: a.question,
-      answer: a.answer
+        question: a.question,
+        answer: a.answer
       }))
       : [];
 
@@ -230,6 +251,7 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
       responses: responses,
       coverLetter: agentResponse.cover_letter,
       resume: req.user.resume,
+      refinedResume: agentResponse.refined_resume, // Tailored resume from agent
       phone: req.user.phoneNumber,
       email: req.user.email,
       preferences: {
@@ -252,6 +274,7 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
       message: 'Application submitted successfully',
       application: {
         coverLetter: application.coverLetter,
+        refinedResume: application.refinedResume, // Tailored resume from agent
         jobQuestions: responses,
         phone: application.phone,
         email: application.email,

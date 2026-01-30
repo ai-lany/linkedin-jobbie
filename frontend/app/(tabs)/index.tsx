@@ -8,6 +8,7 @@ import {
   Platform,
   useColorScheme,
   Alert,
+  Linking,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
@@ -104,6 +105,42 @@ export default function DiscoverScreen() {
   const handleAutoApply = useCallback(
     async (job: Job) => {
       console.log('🎯 handleAutoApply called for job:', job.title);
+      console.log('🔍 Application type:', job.applicationType);
+
+      // Handle external application jobs via external portal
+      if (job.applicationType === 'external') {
+        console.log('📤 External application job - opening external portal');
+
+        try {
+          // Open external portal in browser
+          const externalPortalUrl = `http://localhost:3001/?jobId=${job.id}`;
+
+          console.log('🌐 Opening external portal:', externalPortalUrl);
+
+          const canOpen = await Linking.canOpenURL(externalPortalUrl);
+          if (!canOpen) {
+            throw new Error('Cannot open external portal URL');
+          }
+
+          await Linking.openURL(externalPortalUrl);
+
+          console.log('✅ External portal opened successfully');
+
+        } catch (err) {
+          console.error('Failed to open external portal:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+
+          Alert.alert(
+            'Cannot Open Portal',
+            `Failed to open application portal for ${job.title}. ${errorMessage}`,
+            [{ text: 'OK' }]
+          );
+        }
+
+        return; // Exit early - external portal handled
+      }
+
+      // EXISTING LOGIC for direct application jobs (in-app) continues below
       console.log('🔍 canAutoApply:', canAutoApply);
 
       if (!canAutoApply) {

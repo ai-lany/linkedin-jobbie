@@ -23,6 +23,7 @@ export interface Job {
   postedAt: string; // ISO date string
   applicants: number;
   easyApply: boolean;
+  applicationType: 'direct' | 'external'; // How to apply: direct (in-app) or external (portal)
 
   // Quick view info (shown on card)
   highlights: string[];

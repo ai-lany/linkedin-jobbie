@@ -143,7 +143,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
 
   const currentJob = jobs[currentIndex];
   const hasMoreJobs = currentIndex < jobs.length;
-  const canUndo = swipeHistory.length > 0;
+  // Can only undo if there's history and the last swipe wasn't an application (right swipe)
+  const canUndo = swipeHistory.length > 0 && swipeHistory[swipeHistory.length - 1].direction !== 'right';
 
   const saveJob = useCallback((job: Job) => {
     setSavedJobs((prev) => {

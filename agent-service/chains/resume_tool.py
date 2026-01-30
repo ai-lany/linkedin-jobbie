@@ -2,11 +2,14 @@
 Resume tailoring tool for agentic application processing
 """
 import json
+import logging
 from typing import Dict, Any
 from langchain_core.tools import tool
 from jinja2 import Template
 
 from chains.llm_config import get_llm_chain
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_TEMPLATE = """
@@ -61,11 +64,11 @@ def tailor_resume(job_info: str, profile_info: str) -> str:
         Tailored resume content with summary and key skills
     """
     try:
-        print("[RESUME_TOOL] Parsing input...")
+        logger.info("Parsing resume input...")
         job = json.loads(job_info)
         profile = json.loads(profile_info)
 
-        print(f"[RESUME_TOOL] Tailoring resume for: {job.get('title', 'Unknown')} at {job.get('company', 'Unknown')}")
+        logger.info("Tailoring resume for: %s at %s", job.get('title', 'Unknown'), job.get('company', 'Unknown'))
 
         # Render prompt template
         template = Template(DEFAULT_TEMPLATE)
@@ -74,19 +77,19 @@ def tailor_resume(job_info: str, profile_info: str) -> str:
         # Get LLM chain and invoke
         llm_chain = get_llm_chain(temperature=0.1)  # Low temp for factual resume
 
-        print(f"[RESUME_TOOL] Invoking LLM (prompt length: {len(prompt)} chars)...")
+        logger.info("Invoking LLM (prompt length: %s chars)...", len(prompt))
         result = llm_chain.invoke(prompt)
 
-        print(f"[RESUME_TOOL] Generated resume content ({len(result)} chars)")
+        logger.info("Generated resume content (%s chars)", len(result))
         return result
 
     except json.JSONDecodeError as e:
         error_msg = f"Invalid JSON input: {e}"
-        print(f"[RESUME_TOOL] Error: {error_msg}")
+        logger.error("Resume input error: %s", error_msg)
         return f"Error: {error_msg}. Please provide valid JSON strings."
     except Exception as e:
         error_msg = f"Failed to tailor resume: {str(e)}"
-        print(f"[RESUME_TOOL] Error: {error_msg}")
+        logger.exception("Resume generation failed: %s", error_msg)
         return f"Error: {error_msg}"
 
 

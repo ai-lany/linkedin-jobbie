@@ -1,6 +1,7 @@
-Write a concise, professional cover letter tailored to the job.
+## Task
+Write a concise, professional cover letter tailored to the job. Utilize the candidate's resume to tailor the cover letter to the job. Do not include any other experiences that are not directly stated in the **Candidate Information**.
 
-Job:
+**Job Information**:
 - Title: {{ job.title }}
 - Company: {{ job.company }}
 - Location: {{ job.location }}
@@ -8,7 +9,7 @@ Job:
 - Experience: {{ job.experience }}
 - Description: {{ job.description }}
 
-Candidate:
+**Candidate Information**:
 - Name: {{ profile.name }}
 - Email: {{ profile.email }}
 - Headline: {{ profile.headline }}
@@ -20,3 +21,7 @@ Constraints:
 - 3 short paragraphs maximum
 - Highlight 2-3 relevant strengths from the resume
 - Close with a confident call to action
+- Do not include any other experiences that are not directly stated in the **Candidate Information**
+
+## Output Format
+- Return ONLY the cover letter, no preamble or explanation.

@@ -1,7 +1,10 @@
+import logging
 import pathlib
 from typing import Any
 
 from chains.common import load_template, profile_to_dict, render_template, run_llm, to_dict
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_TEMPLATE = """
 You are an assistant refining a candidate's resume for a specific role.
@@ -48,8 +51,8 @@ def run_resume_chain(
         result = run_llm(prompt, temperature=0, model=model)
         if result is not None:
             return result
-    except Exception as exc:
-        print(f"[AGENT] Ollama error: {exc}. Returning mock response.")
+    except Exception:
+        logger.exception("Ollama error. Returning mock response.")
         return f"[mock-refined]\n{prompt}\n\n(Ollama unavailable)"
 
     return f"[mock-refined]\n{prompt}"

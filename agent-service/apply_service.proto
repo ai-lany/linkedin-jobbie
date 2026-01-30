@@ -15,6 +15,7 @@ message Job {
   string experience = 7;
   string description = 8;
   bool easy_apply = 9;
+  string external_apply_url = 10;
 }
 
 message Profile {
@@ -24,6 +25,7 @@ message Profile {
   string summary = 4;
   repeated string skills = 5;
   string resume_text = 6;
+  string resume_url = 7;
 }
 
 message ApplyRequest {

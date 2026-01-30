@@ -91,6 +91,8 @@ router.post('/', upload.single('resume'), async (req, res, next) => {
       responses: parsedResponses,
       coverLetter: coverLetter,
       resume: req.file ? `/uploads/${req.file.filename}` : null,
+      phone: phone,
+      email: email,
       status: 'pending'
     });
 

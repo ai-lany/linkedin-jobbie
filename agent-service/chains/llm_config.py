@@ -1,9 +1,12 @@
 """
 LLM configuration and initialization for agent tools
 """
+import logging
 import os
 from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
+
+logger = logging.getLogger(__name__)
 
 
 def get_llm(temperature: float = 0.3, model: str = None):
@@ -20,7 +23,7 @@ def get_llm(temperature: float = 0.3, model: str = None):
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     model_name = model or os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 
-    print(f"[LLM] Initializing: model={model_name}, temperature={temperature}")
+    logger.info("Initializing LLM: model=%s, temperature=%s", model_name, temperature)
 
     return ChatOllama(
         model=model_name,

@@ -2,11 +2,14 @@
 Cover letter generation tool for agentic application processing
 """
 import json
+import logging
 from typing import Dict, Any
 from langchain_core.tools import tool
 from jinja2 import Template
 
 from chains.llm_config import get_llm_chain
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_TEMPLATE = """
@@ -61,11 +64,11 @@ def generate_cover_letter(job_info: str, profile_info: str, tailored_resume: str
         Complete cover letter text
     """
     try:
-        print("[COVER_LETTER_TOOL] Parsing input...")
+        logger.info("Parsing cover letter input...")
         job = json.loads(job_info)
         profile = json.loads(profile_info)
 
-        print(f"[COVER_LETTER_TOOL] Generating cover letter for: {job.get('title', 'Unknown')} at {job.get('company', 'Unknown')}")
+        logger.info("Generating cover letter for: %s at %s", job.get('title', 'Unknown'), job.get('company', 'Unknown'))
 
         # Render prompt template
         template = Template(DEFAULT_TEMPLATE)
@@ -78,19 +81,19 @@ def generate_cover_letter(job_info: str, profile_info: str, tailored_resume: str
         # Get LLM chain and invoke
         llm_chain = get_llm_chain(temperature=0.3)  # Slightly creative for writing
 
-        print(f"[COVER_LETTER_TOOL] Invoking LLM (prompt length: {len(prompt)} chars)...")
+        logger.info("Invoking LLM (prompt length: %s chars)...", len(prompt))
         result = llm_chain.invoke(prompt)
 
-        print(f"[COVER_LETTER_TOOL] Generated cover letter ({len(result)} chars)")
+        logger.info("Generated cover letter (%s chars)", len(result))
         return result
 
     except json.JSONDecodeError as e:
         error_msg = f"Invalid JSON input: {e}"
-        print(f"[COVER_LETTER_TOOL] Error: {error_msg}")
+        logger.error("Cover letter input error: %s", error_msg)
         return f"Error: {error_msg}. Please provide valid JSON strings."
     except Exception as e:
         error_msg = f"Failed to generate cover letter: {str(e)}"
-        print(f"[COVER_LETTER_TOOL] Error: {error_msg}")
+        logger.exception("Cover letter generation failed: %s", error_msg)
         return f"Error: {error_msg}"
 
 

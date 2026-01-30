@@ -1,8 +1,11 @@
 import json
+import logging
 import pathlib
 from typing import Any, Dict, List
 
 from chains.common import load_template, profile_to_dict, render_template, run_llm, to_dict
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_QUESTION_ANSWERING_TEMPLATE = """
 You are helping a job candidate answer application questions.
@@ -87,8 +90,8 @@ def run_question_answering_chain(
             # Validate and ensure all questions are answered
             if isinstance(answers, list) and len(answers) > 0:
                 return answers
-    except Exception as exc:
-        print(f"[AGENT] Error generating answers: {exc}. Returning mock response.")
+    except Exception:
+        logger.exception("Error generating answers. Returning mock response.")
 
     # Fallback: return generic answers
     return [

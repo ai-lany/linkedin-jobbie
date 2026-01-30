@@ -1,8 +1,11 @@
+import logging
 from typing import Any, Dict, List, Optional
 
 from chains.resume_chain import run_resume_chain
 from chains.cover_letter_chain import run_cover_letter_chain
 from chains.question_answering_chain import run_question_answering_chain
+
+logger = logging.getLogger(__name__)
 
 
 def run_orchestrator_chain(
@@ -42,28 +45,28 @@ def run_orchestrator_chain(
 
     try:
         # Step 1: Refine resume (always)
-        print("[ORCHESTRATOR] Step 1/3: Refining resume...")
+        logger.info("Step 1/3: Refining resume...")
         refined_resume = run_resume_chain(job_obj, profile_obj, model=model)
         results["refined_resume"] = refined_resume
 
         # Step 2: Generate cover letter (always)
-        print("[ORCHESTRATOR] Step 2/3: Generating cover letter...")
+        logger.info("Step 2/3: Generating cover letter...")
         cover_letter = run_cover_letter_chain(job_obj, profile_obj, model=model)
         results["cover_letter"] = cover_letter
 
         # Step 3: Answer questions (conditional)
         if questions and len(questions) > 0:
-            print(f"[ORCHESTRATOR] Step 3/3: Answering {len(questions)} questions...")
+            logger.info("Step 3/3: Answering %s questions...", len(questions))
             answers = run_question_answering_chain(job_obj, profile_obj, questions, model=model)
             results["answers"] = answers
         else:
-            print("[ORCHESTRATOR] Step 3/3: Skipped (no questions)")
+            logger.info("Step 3/3: Skipped (no questions)")
 
         results["success"] = True
         results["message"] = "Application completed successfully"
 
-    except Exception as exc:
-        print(f"[ORCHESTRATOR] Error: {exc}")
-        results["message"] = f"Orchestration failed: {str(exc)}"
+    except Exception:
+        logger.exception("Orchestration failed")
+        results["message"] = "Orchestration failed"
 
     return results

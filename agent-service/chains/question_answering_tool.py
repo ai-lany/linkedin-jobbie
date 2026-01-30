@@ -2,11 +2,14 @@
 Question answering tool for agentic application processing
 """
 import json
+import logging
 from typing import Dict, Any, List
 from langchain_core.tools import tool
 from jinja2 import Template
 
 from chains.llm_config import get_llm_chain
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_TEMPLATE = """
@@ -64,16 +67,16 @@ def answer_application_questions(job_info: str, profile_info: str, questions: st
         JSON string containing array of answers: [{"question": "...", "answer": "..."}]
     """
     try:
-        print("[QUESTIONS_TOOL] Parsing input...")
+        logger.info("Parsing questions input...")
         job = json.loads(job_info)
         profile = json.loads(profile_info)
         questions_list = json.loads(questions)
 
         if not questions_list:
-            print("[QUESTIONS_TOOL] No questions provided")
+            logger.info("No questions provided")
             return json.dumps([])
 
-        print(f"[QUESTIONS_TOOL] Answering {len(questions_list)} questions for: {job.get('title', 'Unknown')}")
+        logger.info("Answering %s questions for: %s", len(questions_list), job.get('title', 'Unknown'))
 
         # Render prompt template
         template = Template(DEFAULT_TEMPLATE)
@@ -82,7 +85,7 @@ def answer_application_questions(job_info: str, profile_info: str, questions: st
         # Get LLM chain and invoke
         llm_chain = get_llm_chain(temperature=0.2)  # Low temp for consistent answers
 
-        print(f"[QUESTIONS_TOOL] Invoking LLM (prompt length: {len(prompt)} chars)...")
+        logger.info("Invoking LLM (prompt length: %s chars)...", len(prompt))
         result = llm_chain.invoke(prompt)
 
         # Clean up the result - remove markdown code blocks if present
@@ -103,14 +106,14 @@ def answer_application_questions(job_info: str, profile_info: str, questions: st
 
             # Ensure all questions are answered
             if len(answers) != len(questions_list):
-                print(f"[QUESTIONS_TOOL] Warning: Expected {len(questions_list)} answers, got {len(answers)}")
+                logger.warning("Expected %s answers, got %s", len(questions_list), len(answers))
 
-            print(f"[QUESTIONS_TOOL] Generated {len(answers)} answers")
+            logger.info("Generated %s answers", len(answers))
             return json.dumps(answers)
 
         except (json.JSONDecodeError, ValueError) as e:
-            print(f"[QUESTIONS_TOOL] Failed to parse LLM response as JSON: {e}")
-            print(f"[QUESTIONS_TOOL] Response was: {cleaned[:200]}")
+            logger.warning("Failed to parse LLM response as JSON: %s", e)
+            logger.debug("LLM response was: %s", cleaned[:200])
 
             # Fallback: Generate simple answers
             fallback_answers = [
@@ -122,16 +125,16 @@ def answer_application_questions(job_info: str, profile_info: str, questions: st
                 }
                 for q in questions_list
             ]
-            print("[QUESTIONS_TOOL] Using fallback answers")
+            logger.info("Using fallback answers")
             return json.dumps(fallback_answers)
 
     except json.JSONDecodeError as e:
         error_msg = f"Invalid JSON input: {e}"
-        print(f"[QUESTIONS_TOOL] Error: {error_msg}")
+        logger.error("Questions input error: %s", error_msg)
         return json.dumps([])
     except Exception as e:
         error_msg = f"Failed to answer questions: {str(e)}"
-        print(f"[QUESTIONS_TOOL] Error: {error_msg}")
+        logger.exception("Question answering failed: %s", error_msg)
         return json.dumps([])
 
 

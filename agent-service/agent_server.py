@@ -1,3 +1,4 @@
+import logging
 import time
 from concurrent import futures
 
@@ -10,6 +11,9 @@ from chains.question_answering_chain import run_question_answering_chain
 from chains.resume_chain import run_resume_chain
 from chains.orchestrator_chain import run_orchestrator_chain
 from chains.agentic_orchestrator import run_agentic_orchestrator
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class ApplyService(apply_service_pb2_grpc.ApplyServiceServicer):
@@ -74,7 +78,7 @@ class ApplyService(apply_service_pb2_grpc.ApplyServiceServicer):
     def AutoApply(self, request, context):
         """Full auto-apply orchestration."""
         import sys
-        print(f"[AUTO_APPLY] Received request for job: {request.job.title}", flush=True)
+        logger.info("AUTO_APPLY received request for job: %s", request.job.title)
 
         # Convert questions to dict format
         questions = [{
@@ -83,16 +87,16 @@ class ApplyService(apply_service_pb2_grpc.ApplyServiceServicer):
             "options": list(q.options) if q.options else []
         } for q in request.questions] if request.questions else None
 
-        print(f"[AUTO_APPLY] Converted {len(questions) if questions else 0} questions", flush=True)
+        logger.info("AUTO_APPLY converted %s questions", len(questions) if questions else 0)
 
         # Run agentic orchestrator
-        print("[AUTO_APPLY] Starting agentic orchestrator...", flush=True)
+        logger.info("AUTO_APPLY starting agentic orchestrator...")
         result = run_agentic_orchestrator(
             job_obj=request.job,
             profile_obj=request.profile,
             questions=questions
         )
-        print(f"[AUTO_APPLY] Agentic orchestrator completed with success={result['success']}", flush=True)
+        logger.info("AUTO_APPLY agentic orchestrator completed with success=%s", result['success'])
 
         # Generate application ID
         application_id = f"app-{int(time.time() * 1000)}"
@@ -120,7 +124,7 @@ def serve(port: int = 50051):
     apply_service_pb2_grpc.add_ApplyServiceServicer_to_server(ApplyService(), server)
     server.add_insecure_port(f"[::]:{port}")
     server.start()
-    print(f"ApplyService gRPC server listening on port {port}")
+    logger.info("ApplyService gRPC server listening on port %s", port)
     server.wait_for_termination()
 
 

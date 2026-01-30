@@ -7,6 +7,7 @@ This orchestrator uses a ReAct-style agent that can dynamically decide:
 - How to use outputs from one tool as input to another
 """
 import json
+import logging
 from typing import Any, Dict, List, Optional
 
 from langgraph.prebuilt import create_react_agent
@@ -16,23 +17,30 @@ from chains.llm_config import get_llm
 from chains.resume_tool import tailor_resume
 from chains.cover_letter_tool import generate_cover_letter
 from chains.question_answering_tool import answer_application_questions
+from chains.external_apply_tool import inspect_external_application, submit_external_application
 from chains.common import to_dict, profile_to_dict
+
+logger = logging.getLogger(__name__)
 
 
 # Agent system prompt
 AGENT_SYSTEM_PROMPT = """You are an expert job application assistant that helps candidates apply to jobs.
 
-You have access to three specialized tools:
+You have access to five specialized tools:
 1. tailor_resume - Customizes the candidate's resume for a specific job
 2. generate_cover_letter - Creates a personalized cover letter
 3. answer_application_questions - Answers job application questions
+4. inspect_external_application - Inspects external application form fields
+5. submit_external_application - Fills and submits an external application portal
 
 Your task is to process a job application by using these tools intelligently.
 
 Guidelines:
 - ALWAYS tailor the resume first - this provides context for other tasks
-- Generate a cover letter after the resume (you can reference the tailored resume)
-- Only answer questions if they were provided
+- If job.external_apply_url is present, inspect the external application first to determine which fields are required.
+- Generate a cover letter only when the portal requires it.
+- Answer questions only when they are required or present on the portal.
+- Submit the external application only after the required data is prepared.
 - Use the output from previous tools to inform later ones
 - Be efficient - don't use a tool if it's not needed
 
@@ -80,6 +88,7 @@ def run_agentic_orchestrator(
             "refined_resume": str,
             "cover_letter": str,
             "answers": [{"question": "...", "answer": "..."}],
+            "external_application": {"success": bool, "message": str},
             "success": bool,
             "message": str,
             "agent_reasoning": str  # Agent's thought process
@@ -90,12 +99,13 @@ def run_agentic_orchestrator(
         "refined_resume": "",
         "cover_letter": "",
         "answers": [],
+        "external_application": {},
         "message": "",
         "agent_reasoning": ""
     }
 
     try:
-        print("[AGENTIC_ORCHESTRATOR] Starting agentic application processing...")
+        logger.info("Starting agentic application processing...")
 
         # Convert objects to JSON for tools
         job_dict = to_dict(job_obj)
@@ -122,13 +132,17 @@ Questions (JSON): {questions_json}
 
 Tasks to complete:
 1. Tailor the resume for this job (REQUIRED)
-2. Generate a cover letter (REQUIRED)
-{"3. Answer the application questions (REQUIRED)" if has_questions else "3. Skip questions (none provided)"}
+{"2. Inspect external application if job.external_apply_url is present (REQUIRED)" if job_dict.get("external_apply_url") else "2. Skip external inspection (no external_apply_url)"}
+3. Generate a cover letter if required by the portal inspection
+{"4. Answer the application questions if required/present" if (has_questions or job_dict.get("external_apply_url")) else "4. Skip questions (none provided)"}
+{"5. Submit external application after required data is ready (REQUIRED)" if job_dict.get("external_apply_url") else "5. Skip external submission"}
 
 For each tool:
 - tailor_resume expects: job_info (JSON string), profile_info (JSON string)
 - generate_cover_letter expects: job_info (JSON string), profile_info (JSON string), tailored_resume (optional string)
 - answer_application_questions expects: job_info (JSON string), profile_info (JSON string), questions (JSON string)
+- inspect_external_application expects: portal_url
+- submit_external_application expects: portal_url, profile_info, cover_letter, answers_json, resume_url
 
 Return a final summary of what was generated.
 """
@@ -136,15 +150,15 @@ Return a final summary of what was generated.
         # Create the agent using LangGraph
         llm = get_llm(temperature=0.1, model=model)  # Low temp for logical reasoning
 
-        tools = [tailor_resume, generate_cover_letter]
+        tools = [tailor_resume, generate_cover_letter, inspect_external_application, submit_external_application]
         if has_questions:
             tools.append(answer_application_questions)
 
         # Create react agent graph
         agent_executor = create_react_agent(llm, tools)
 
-        print(f"[AGENTIC_ORCHESTRATOR] Running agent with {len(tools)} tools...")
-        print(f"[AGENTIC_ORCHESTRATOR] Task: {job_dict.get('title')} at {job_dict.get('company')}")
+        logger.info("Running agent with %s tools...", len(tools))
+        logger.info("Task: %s at %s", job_dict.get('title'), job_dict.get('company'))
 
         # Execute the agent with LangGraph API
         result = agent_executor.invoke({
@@ -156,24 +170,24 @@ Return a final summary of what was generated.
         agent_output = messages[-1].content if messages else ""
 
         # Log agent's reasoning and tool calls
-        print(f"\n[AGENT TRACE] ===== Agent Execution Trace =====")
+        logger.debug("===== Agent Execution Trace =====")
         for i, msg in enumerate(messages):
             msg_type = type(msg).__name__
-            print(f"[AGENT TRACE] Step {i+1}: {msg_type}")
+            logger.debug("Step %s: %s", i + 1, msg_type)
 
             # Log AI messages (agent's thoughts)
             if msg_type == "AIMessage":
                 if hasattr(msg, 'content') and msg.content:
-                    print(f"[AGENT TRACE]   Thought: {msg.content[:200]}...")
+                    logger.debug("Thought: %s...", msg.content[:200])
                 if hasattr(msg, 'tool_calls') and msg.tool_calls:
                     for tc in msg.tool_calls:
-                        print(f"[AGENT TRACE]   Tool Call: {tc.get('name', 'unknown')}")
+                        logger.debug("Tool Call: %s", tc.get('name', 'unknown'))
 
             # Log tool responses
             elif msg_type == "ToolMessage":
-                print(f"[AGENT TRACE]   Tool Response: {len(msg.content)} chars")
+                logger.debug("Tool Response: %s chars", len(msg.content))
 
-        print(f"[AGENT TRACE] ===== End Trace =====\n")
+        logger.debug("===== End Trace =====")
 
         # Extract intermediate steps from messages
         intermediate_steps = []
@@ -186,7 +200,7 @@ Return a final summary of what was generated.
                             intermediate_steps.append((tool_call, response_msg.content))
                             break
 
-        print(f"[AGENTIC_ORCHESTRATOR] Agent completed with {len(messages)} messages")
+        logger.info("Agent completed with %s messages", len(messages))
 
         # Parse tool outputs from messages
         for msg in messages:
@@ -202,29 +216,37 @@ Return a final summary of what was generated.
 
                                 if tool_name == "tailor_resume":
                                     results["refined_resume"] = observation
-                                    print(f"[AGENTIC_ORCHESTRATOR] Captured resume: {len(observation)} chars")
+                                    logger.info("Captured resume: %s chars", len(observation))
 
                                 elif tool_name == "generate_cover_letter":
                                     results["cover_letter"] = observation
-                                    print(f"[AGENTIC_ORCHESTRATOR] Captured cover letter: {len(observation)} chars")
+                                    logger.info("Captured cover letter: %s chars", len(observation))
 
                                 elif tool_name == "answer_application_questions":
                                     try:
                                         results["answers"] = json.loads(observation)
-                                        print(f"[AGENTIC_ORCHESTRATOR] Captured {len(results['answers'])} answers")
+                                        logger.info("Captured %s answers", len(results['answers']))
                                     except json.JSONDecodeError:
-                                        print(f"[AGENTIC_ORCHESTRATOR] Warning: Could not parse answers JSON")
+                                        logger.warning("Could not parse answers JSON")
                                         results["answers"] = []
+
+                                elif tool_name == "submit_external_application":
+                                    try:
+                                        results["external_application"] = json.loads(observation)
+                                        logger.info("Captured external application result")
+                                    except json.JSONDecodeError:
+                                        logger.warning("Could not parse external application result")
+                                        results["external_application"] = {"success": False, "message": "Invalid external apply result"}
 
         # Store agent reasoning
         results["agent_reasoning"] = agent_output
         results["success"] = True
         results["message"] = "Application processed successfully by agent"
 
-        print("[AGENTIC_ORCHESTRATOR] Agent processing completed successfully")
+        logger.info("Agent processing completed successfully")
 
     except Exception as exc:
-        print(f"[AGENTIC_ORCHESTRATOR] Error: {exc}")
+        logger.exception("Agentic orchestration failed")
         results["message"] = f"Agentic orchestration failed: {str(exc)}"
         results["success"] = False
 

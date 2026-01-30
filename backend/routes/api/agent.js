@@ -6,6 +6,8 @@ const { generateCoverLetter, answerQuestions, autoApply } = require('../../servi
 
 const Job = mongoose.model('Job');
 
+const EXTERNAL_PORTAL_URL = process.env.EXTERNAL_PORTAL_URL || 'http://localhost:3001';
+
 const buildResumeText = (user) => {
   const lines = [
     `Name: ${user.username}`,
@@ -40,6 +42,13 @@ const formatSalary = (salary) => {
   const period = salary.period || '';
   return `${salary.min}-${salary.max} ${currency} ${period}`.trim();
 };
+
+const buildExternalApplyUrl = (jobId) => {
+  const portalUrl = new URL(EXTERNAL_PORTAL_URL);
+  portalUrl.searchParams.set('jobId', jobId);
+  return portalUrl.toString();
+};
+
 
 router.post('/cover-letter', requireUser, async (req, res, next) => {
   try {
@@ -167,11 +176,16 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
       applicant: req.user._id,
     });
 
+    const externalApplyUrl = job.applicationType === 'external'
+      ? buildExternalApplyUrl(job._id.toString())
+      : null;
+
     if (existingApplication) {
       return res.json({
         success: true,
         applicationId: existingApplication._id.toString(),
         message: 'Application already submitted',
+        externalApplyUrl: externalApplyUrl,
         application: {
           coverLetter: existingApplication.coverLetter || '',
           refinedResume: existingApplication.refinedResume || '',
@@ -211,6 +225,7 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
         experience: '',
         description: job.description,
         easy_apply: true,
+        external_apply_url: externalApplyUrl || '',
       },
       profile: {
         name: req.user.username,
@@ -219,6 +234,7 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
         summary: '',
         skills: [],
         resume_text: resumeText,
+        resume_url: req.user.resume || '',
       },
       questions: (job.questions || []).map(q => ({
         question: q,
@@ -236,8 +252,6 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
       return next(error);
     }
 
-    // Submit application to database
-    // Build responses array from answers
     const responses = Array.isArray(agentResponse.answers)
       ? agentResponse.answers.map(a => ({
         question: a.question,
@@ -245,6 +259,22 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
       }))
       : [];
 
+    if (job.applicationType === 'external') {
+      return res.json({
+        success: true,
+        applicationId: '',
+        message: 'External application submitted via agent',
+        externalApplyUrl: externalApplyUrl,
+        application: {
+          coverLetter: agentResponse.cover_letter,
+          jobQuestions: responses,
+          phone: req.user.phoneNumber || '',
+          email: req.user.email || ''
+        }
+      });
+    }
+
+    // Submit application to database
     const application = new JobApplication({
       job: job._id,
       applicant: req.user._id,
@@ -272,6 +302,7 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
       success: true,
       applicationId: application._id.toString(),
       message: 'Application submitted successfully',
+      externalApplyUrl: externalApplyUrl,
       application: {
         coverLetter: application.coverLetter,
         refinedResume: application.refinedResume, // Tailored resume from agent

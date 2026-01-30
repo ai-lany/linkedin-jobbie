@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 from typing import Any, Dict, Optional
@@ -11,6 +12,8 @@ except ImportError:
     ChatOllama = None  # type: ignore
     StrOutputParser = None  # type: ignore
 
+logger = logging.getLogger(__name__)
+
 
 def to_dict(obj: Any) -> Dict[str, Any]:
     return {
@@ -23,6 +26,7 @@ def to_dict(obj: Any) -> Dict[str, Any]:
         "experience": getattr(obj, "experience", ""),
         "description": getattr(obj, "description", ""),
         "easy_apply": getattr(obj, "easy_apply", False),
+        "external_apply_url": getattr(obj, "external_apply_url", ""),
         "logo": getattr(obj, "logo", ""),
         "postedDate": getattr(obj, "postedDate", ""),
         "benefits": list(getattr(obj, "benefits", [])),
@@ -38,6 +42,7 @@ def profile_to_dict(profile: Any) -> Dict[str, Any]:
         "summary": getattr(profile, "summary", ""),
         "skills": list(getattr(profile, "skills", [])),
         "resume_text": getattr(profile, "resume_text", ""),
+        "resume_url": getattr(profile, "resume_url", ""),
     }
 
 
@@ -61,14 +66,14 @@ def run_llm(prompt: str, temperature: float, model: Optional[str]) -> Optional[s
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     model_name = model or os.getenv("OLLAMA_MODEL", "llama3.2")
 
-    print(f"[AGENT] Initializing Ollama: model={model_name}, base_url={ollama_base_url}")
+    logger.info("Initializing Ollama: model=%s, base_url=%s", model_name, ollama_base_url)
     llm = ChatOllama(
         model=model_name,
         base_url=ollama_base_url,
         temperature=temperature,
     )
 
-    print(f"[AGENT] Calling Ollama LLM (prompt length: {len(prompt)} chars)...")
+    logger.info("Calling Ollama LLM (prompt length: %s chars)...", len(prompt))
     if StrOutputParser:
         parser = StrOutputParser()
         response = llm.invoke(prompt)

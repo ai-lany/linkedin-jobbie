@@ -109,33 +109,30 @@ export default function DiscoverScreen() {
 
       // Handle external application jobs via external portal
       if (job.applicationType === 'external') {
-        console.log('📤 External application job - opening external portal');
+        console.log('📤 External application job - browser opening disabled');
 
-        try {
-          // Open external portal in browser
-          const externalPortalUrl = `http://localhost:3001/?jobId=${job.id}`;
+        // Browser opening is currently disabled for external applications
+        // Uncomment the code below to re-enable external portal opening
 
-          console.log('🌐 Opening external portal:', externalPortalUrl);
-
-          const canOpen = await Linking.canOpenURL(externalPortalUrl);
-          if (!canOpen) {
-            throw new Error('Cannot open external portal URL');
-          }
-
-          await Linking.openURL(externalPortalUrl);
-
-          console.log('✅ External portal opened successfully');
-
-        } catch (err) {
-          console.error('Failed to open external portal:', err);
-          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-
-          Alert.alert(
-            'Cannot Open Portal',
-            `Failed to open application portal for ${job.title}. ${errorMessage}`,
-            [{ text: 'OK' }]
-          );
-        }
+        // try {
+        //   // Open external portal in browser
+        //   const externalPortalUrl = `http://localhost:3001/?jobId=${job.id}`;
+        //   console.log('🌐 Opening external portal:', externalPortalUrl);
+        //   const canOpen = await Linking.canOpenURL(externalPortalUrl);
+        //   if (!canOpen) {
+        //     throw new Error('Cannot open external portal URL');
+        //   }
+        //   await Linking.openURL(externalPortalUrl);
+        //   console.log('✅ External portal opened successfully');
+        // } catch (err) {
+        //   console.error('Failed to open external portal:', err);
+        //   const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        //   Alert.alert(
+        //     'Cannot Open Portal',
+        //     `Failed to open application portal for ${job.title}. ${errorMessage}`,
+        //     [{ text: 'OK' }]
+        //   );
+        // }
 
         return; // Exit early - external portal handled
       }

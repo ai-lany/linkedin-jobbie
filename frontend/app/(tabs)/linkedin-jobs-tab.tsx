@@ -141,7 +141,7 @@ export default function LinkedInJobsTabScreen() {
                   ⋅
                 </Text>
               </View>
-              {item.easyApply && (
+              {item.applicationType === 'direct' && (
                 <View style={[styles.easyApplyRow, { marginLeft: 6 }]}>
                   <Image
                     source={require('../../assets/images/linkedin_logo.png')}

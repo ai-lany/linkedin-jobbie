@@ -118,7 +118,7 @@ function transformBackendJob(id: string, backendJob: any): Job {
     salary: backendJob.salary || null, // Backend doesn't have salary data
     postedAt: backendJob.createdAt || new Date().toISOString(),
     applicants: backendJob.numberOfApplicants || 0,
-    easyApply: backendJob.questions && backendJob.questions.length > 0,
+    easyApply: (backendJob.applicationType || 'direct') === 'direct',
     applicationType: backendJob.applicationType || 'direct', // 'direct' or 'external'
     highlights: [""],
     skills: [], // Could parse from description in the future

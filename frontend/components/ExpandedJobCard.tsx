@@ -155,7 +155,7 @@ export default function ExpandedJobCard({
             </Text>
           </View>
 
-          {job.easyApply && (
+          {job.applicationType === 'direct' && (
             <View style={[styles.easyApplyBanner, { backgroundColor: colors.primaryLight }]}>
               <Ionicons name="flash" size={18} color={colors.primary} />
               <Text style={[styles.easyApplyText, { color: colors.primary }]}>
@@ -245,7 +245,7 @@ export default function ExpandedJobCard({
         >
           <Ionicons name="checkmark" size={28} color={colors.textInverse} />
           <Text style={[styles.applyButtonText, { color: colors.textInverse }]}>
-            {job.easyApply ? 'Easy Apply' : 'Apply'}
+            {job.applicationType === 'direct' ? 'Easy Apply' : 'Apply'}
           </Text>
         </TouchableOpacity>
 

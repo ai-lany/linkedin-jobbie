@@ -103,7 +103,7 @@ export default function JobCard({ job, onPress }: JobCardProps) {
             {`${String(job.company.industry)} · ${String(job.company.size)}`}
           </Text>
         </View>
-        {job.easyApply && (
+        {job.applicationType === 'direct' && (
           <View style={[styles.easyApplyBadge, { backgroundColor: colors.primaryLight }]}>
             <Ionicons name="flash" size={12} color={colors.primary} />
             <Text style={[styles.easyApplyText, { color: colors.primary }]}>Easy Apply</Text>

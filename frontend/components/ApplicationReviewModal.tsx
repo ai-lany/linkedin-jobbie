@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Linking,
   useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -44,6 +45,15 @@ export default function ApplicationReviewModal({
     if (!path) return 'No resume';
     const parts = path.split('/');
     return parts[parts.length - 1];
+  };
+
+  const externalPortalUrl = `http://localhost:3001/?jobId=${job.id}`;
+
+  const handleOpenExternalPortal = async () => {
+    const canOpen = await Linking.canOpenURL(externalPortalUrl);
+    if (canOpen) {
+      await Linking.openURL(externalPortalUrl);
+    }
   };
 
   return (
@@ -89,6 +99,18 @@ export default function ApplicationReviewModal({
               Applied {formatDate(appliedAt)}
             </Text>
           </View>
+
+          {job.applicationType === 'external' && (
+            <TouchableOpacity
+              onPress={handleOpenExternalPortal}
+              style={styles.externalLinkRow}
+            >
+              <Ionicons name="link" size={18} color={colors.primary} />
+              <Text style={[styles.externalLinkText, { color: colors.primary }]}>
+                Company website
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Contact Information */}
@@ -355,6 +377,16 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   statusText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+  },
+  externalLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  externalLinkText: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
   },

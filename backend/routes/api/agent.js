@@ -267,9 +267,19 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
         externalApplyUrl: externalApplyUrl,
         application: {
           coverLetter: agentResponse.cover_letter,
+          refinedResume: agentResponse.refined_resume,
           jobQuestions: responses,
           phone: req.user.phoneNumber || '',
-          email: req.user.email || ''
+          email: req.user.email || '',
+          preferences: {
+            workAuthorizationInCountry: req.user.additionalInfo?.workAuthorizationInCountry || false,
+            needsVisa: req.user.additionalInfo?.needsVisa || false,
+            ethnicity: req.user.additionalInfo?.ethnicity || 'Prefer not to say',
+            veteran: req.user.additionalInfo?.veteran || 'Prefer not to say',
+            disability: req.user.additionalInfo?.disability || 'Prefer not to say',
+            gender: req.user.additionalInfo?.gender || 'Prefer not to say',
+            willingToRelocate: req.user.additionalInfo?.willingToRelocate || false
+          }
         }
       });
     }

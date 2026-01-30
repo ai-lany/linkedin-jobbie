@@ -125,6 +125,10 @@ export default function DiscoverScreen() {
         }, 'pending');
 
         // Call background auto-apply endpoint
+        console.log('📡 Calling auto-apply API:', `${apiBaseUrl}/agent/auto-apply/${job.id}`);
+        console.log('🔑 Token available:', token ? `Yes (${token.substring(0, 10)}...)` : 'No');
+        console.log('👤 Current user:', currentUser?.username);
+
         const response = await fetch(`${apiBaseUrl}/agent/auto-apply/${job.id}`, {
           method: 'POST',
           headers: {
@@ -133,11 +137,23 @@ export default function DiscoverScreen() {
           },
         });
 
+        console.log('📡 Auto-apply response status:', response.status);
+
         if (!response.ok) {
-          throw new Error('Application failed');
+          const errorText = await response.text();
+          console.error('❌ Auto-apply error response:', errorText);
+          let errorMessage = 'Application failed';
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch {
+            errorMessage = errorText || errorMessage;
+          }
+          throw new Error(`${errorMessage} (Status: ${response.status})`);
         }
 
         const data = await response.json();
+        console.log('✅ Auto-apply successful:', data);
 
         // Update status to completed
         updateApplicationStatus(job.id, 'completed', data.applicationId);
@@ -153,7 +169,25 @@ export default function DiscoverScreen() {
 
         // Error notification
         console.error('Auto-apply failed:', err);
-        Alert.alert('Application Failed', `Failed to apply to ${job.title}. Please try again.`);
+
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+
+        // Check if it's an authentication error
+        if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+          Alert.alert(
+            'Session Expired',
+            'Your session has expired. Please log in again to continue applying to jobs.',
+            [
+              { text: 'OK', onPress: () => router.push('/(tabs)/profile') }
+            ]
+          );
+        } else {
+          Alert.alert(
+            'Application Failed',
+            `Failed to apply to ${job.title}. ${errorMessage}`,
+            [{ text: 'OK' }]
+          );
+        }
       }
     },
     [applyToJob, canAutoApply, currentUser?.email, currentUser?.phoneNumber, currentUser?.resume, token, updateApplicationStatus]

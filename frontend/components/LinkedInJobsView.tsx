@@ -92,7 +92,7 @@ export default function LinkedInJobsView({ onJobbieClick }: LinkedInJobsViewProp
                 {formatSalary(item.salary)}
               </Text>
             )}
-            {item.easyApply && (
+            {item.applicationType === 'direct' && (
               <View style={styles.easyApplyRow}>
                 <Ionicons name="flash" size={12} color={colors.primary} />
                 <Text style={[styles.easyApplyText, { color: colors.primary }]}>Easy Apply</Text>

@@ -32,6 +32,21 @@ const jobApplicationSchema = new Schema({
   },
   resume: {
     type: String
+  },
+  phone: {
+    type: String
+  },
+  email: {
+    type: String
+  },
+  preferences: {
+    workAuthorizationInCountry: Boolean,
+    needsVisa: Boolean,
+    ethnicity: String,
+    veteran: String,
+    disability: String,
+    gender: String,
+    willingToRelocate: Boolean
   }
 }, {
   timestamps: true

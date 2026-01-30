@@ -32,7 +32,7 @@ interface JobContextType {
   appliedJobs: AppliedJob[];
   applyToJob: (job: Job, data: EasyApplyData, status?: 'pending' | 'completed' | 'failed', applicationId?: string) => void;
   isJobApplied: (jobId: string) => boolean;
-  updateApplicationStatus: (jobId: string, status: 'pending' | 'completed' | 'failed', applicationId?: string) => void;
+  updateApplicationStatus: (jobId: string, status: 'pending' | 'completed' | 'failed', applicationId?: string, applicationData?: Partial<EasyApplyData>) => void;
 
   // Swipe history for undo
   swipeHistory: { job: Job; direction: SwipeDirection }[];
@@ -185,12 +185,23 @@ export function JobProvider({ children }: { children: ReactNode }) {
   const updateApplicationStatus = useCallback((
     jobId: string,
     status: 'pending' | 'completed' | 'failed',
-    applicationId?: string
+    applicationId?: string,
+    applicationData?: Partial<EasyApplyData>
   ) => {
     setAppliedJobs((prev) =>
       prev.map(app =>
         app.job.id === jobId
-          ? { ...app, status, applicationId: applicationId || app.applicationId }
+          ? {
+              ...app,
+              status,
+              applicationId: applicationId || app.applicationId,
+              ...(applicationData && {
+                applicationData: {
+                  ...app.applicationData,
+                  ...applicationData
+                }
+              })
+            }
           : app
       )
     );

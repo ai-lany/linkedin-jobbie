@@ -230,6 +230,17 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
       responses: responses,
       coverLetter: agentResponse.cover_letter,
       resume: req.user.resume,
+      phone: req.user.phoneNumber,
+      email: req.user.email,
+      preferences: {
+        workAuthorizationInCountry: req.user.additionalInfo?.workAuthorizationInCountry || false,
+        needsVisa: req.user.additionalInfo?.needsVisa || false,
+        ethnicity: req.user.additionalInfo?.ethnicity || 'Prefer not to say',
+        veteran: req.user.additionalInfo?.veteran || 'Prefer not to say',
+        disability: req.user.additionalInfo?.disability || 'Prefer not to say',
+        gender: req.user.additionalInfo?.gender || 'Prefer not to say',
+        willingToRelocate: req.user.additionalInfo?.willingToRelocate || false
+      },
       status: 'pending'
     });
 
@@ -239,6 +250,13 @@ router.post('/auto-apply/:jobId', requireUser, async (req, res, next) => {
       success: true,
       applicationId: application._id.toString(),
       message: 'Application submitted successfully',
+      application: {
+        coverLetter: application.coverLetter,
+        jobQuestions: responses,
+        phone: application.phone,
+        email: application.email,
+        preferences: application.preferences
+      }
     });
 
   } catch (err) {

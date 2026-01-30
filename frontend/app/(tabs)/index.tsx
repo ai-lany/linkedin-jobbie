@@ -122,6 +122,16 @@ export default function DiscoverScreen() {
           email: currentUser?.email ?? '',
           additionalQuestions: [],
           coverLetter: '',
+          jobQuestions: job.questions?.map(q => ({ question: q, answer: '' })) || [],
+          preferences: {
+            workAuthorizationInCountry: currentUser?.additionalInfo?.workAuthorizationInCountry || false,
+            needsVisa: currentUser?.additionalInfo?.needsVisa || false,
+            ethnicity: currentUser?.additionalInfo?.ethnicity || 'Prefer not to say',
+            veteran: currentUser?.additionalInfo?.veteran || 'Prefer not to say',
+            disability: currentUser?.additionalInfo?.disability || 'Prefer not to say',
+            gender: currentUser?.additionalInfo?.gender || 'Prefer not to say',
+            willingToRelocate: currentUser?.additionalInfo?.willingToRelocate || false,
+          },
         }, 'pending');
 
         // Call background auto-apply endpoint
@@ -155,8 +165,8 @@ export default function DiscoverScreen() {
         const data = await response.json();
         console.log('✅ Auto-apply successful:', data);
 
-        // Update status to completed
-        updateApplicationStatus(job.id, 'completed', data.applicationId);
+        // Update status to completed with application data from backend
+        updateApplicationStatus(job.id, 'completed', data.applicationId, data.application);
 
         // Success notification (using Alert for now, can be replaced with toast component)
         if (Platform.OS === 'web') {

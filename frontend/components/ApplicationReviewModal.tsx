@@ -116,19 +116,41 @@ export default function ApplicationReviewModal({
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Resume</Text>
 
-          <View style={[styles.resumeCard, { backgroundColor: colors.background, borderColor: colors.divider }]}>
-            <View style={[styles.resumeIcon, { backgroundColor: colors.primary + '20' }]}>
-              <Ionicons name="document-text" size={24} color={colors.primary} />
-            </View>
-            <View style={styles.resumeInfo}>
-              <Text style={[styles.resumeName, { color: colors.text }]}>
-                {getFileName(applicationData.resume || '')}
+          {/* Show refined resume if available from agent */}
+          {applicationData.refinedResume ? (
+            <>
+              <View style={[styles.resumeCard, { backgroundColor: colors.background, borderColor: colors.divider }]}>
+                <View style={[styles.resumeIcon, { backgroundColor: colors.success + '20' }]}>
+                  <Ionicons name="sparkles" size={24} color={colors.success} />
+                </View>
+                <View style={styles.resumeInfo}>
+                  <Text style={[styles.resumeName, { color: colors.text }]}>
+                    AI-Tailored Resume
+                  </Text>
+                  <Text style={[styles.resumeMeta, { color: colors.textMuted }]}>
+                    Customized for this position
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.refinedResumeText, { color: colors.text }]}>
+                {applicationData.refinedResume}
               </Text>
-              <Text style={[styles.resumeMeta, { color: colors.textMuted }]}>
-                Submitted resume
-              </Text>
+            </>
+          ) : (
+            <View style={[styles.resumeCard, { backgroundColor: colors.background, borderColor: colors.divider }]}>
+              <View style={[styles.resumeIcon, { backgroundColor: colors.primary + '20' }]}>
+                <Ionicons name="document-text" size={24} color={colors.primary} />
+              </View>
+              <View style={styles.resumeInfo}>
+                <Text style={[styles.resumeName, { color: colors.text }]}>
+                  {getFileName(applicationData.resume || '')}
+                </Text>
+                <Text style={[styles.resumeMeta, { color: colors.textMuted }]}>
+                  Submitted resume
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
 
         {/* Cover Letter */}
@@ -377,6 +399,11 @@ const styles = StyleSheet.create({
   },
   resumeMeta: {
     fontSize: FontSize.sm,
+  },
+  refinedResumeText: {
+    fontSize: FontSize.md,
+    lineHeight: 22,
+    marginTop: Spacing.md,
   },
   coverLetterText: {
     fontSize: FontSize.md,
